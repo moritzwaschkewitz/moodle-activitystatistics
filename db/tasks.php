@@ -14,8 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-$string['pluginname'] = 'Activity Statistics';
-$string['privacy:metadata'] = 'This plugin does not store any personal data. All data is logged and stored anonymously.';
-
-// TODO: missing $string
-$string['logactivitiescount'] = 'Log Activity Counts';
+// TODO: setting for custom interval
+$tasks = [
+    [
+        'classname' => '\tool_activitystatistics\task\log_activities_count',
+        'blocking' => 0,
+        'minute' => '30',
+        'hour' => '17',
+        'day' => '*',
+        'month' => '1,7',
+        'dayofweek' => '0',
+    ],
+];
