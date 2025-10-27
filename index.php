@@ -14,14 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
+require_once(__DIR__ . '/../../../config.php');
 
-$plugin->component = 'tool_activitystatistics';
+require_login();
+$context = context_system::instance();
+require_capability('tool/activitystatistics:view', $context);
 
-$plugin->version = 2025102700;
-$plugin->release = 'v0.1.0';
-$plugin->maturity = MATURITY_ALPHA;
+$PAGE->set_context($context);
+$PAGE->set_url(new moodle_url('/admin/tool/activitystatistics/index.php'));
+$PAGE->set_title('Hello World - Title');
+$PAGE->set_heading('Hello World - Heading');
 
-// TODO: find out which moodle-calls are needed and when they were implemented
-// Require Moodle 4.0.0.
-$plugin->requires = 2022041900.00;
+echo $OUTPUT->header();
+echo html_writer::tag('h2', 'Hello World');
+echo $OUTPUT->footer();
