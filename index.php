@@ -29,36 +29,48 @@ echo $OUTPUT->header();
 
 global $DB;
 
-$sql = "
-    SELECT l.activityname,
-           c.count,
-           c.timestamp
-      FROM {tool_activitystatistics_lookup} l
-      JOIN {tool_activitystatistics_counts} c
-        ON l.id = c.activityid
-     WHERE c.timestamp = (
-         SELECT MAX(c2.timestamp)
-           FROM {tool_activitystatistics_counts} c2
-          WHERE c2.activityid = l.id
-     )
-  ORDER BY l.activityname ASC
-";
 
-$records = $DB->get_records_sql($sql);
+echo html_writer::tag('h2', 'Dashboard Overview');
 
-$table = new html_table();
-$table->head = ['Activity', 'Count', 'Last registered change'];
-$table->data = [];
+// --- General overview --- //
+$number_of_activities = $DB->count_records('tool_activitystatistics_lookup');
 
-foreach ($records as $record) {
-    $table->data[] = [
-        format_string($record->activityname),
-        format_string($record->count),
-        userdate($record->timestamp)
-    ];
+/*
+ * since DB only logs changes the last timestamp for each activity is different
+ * -> Inner select finds last timestamp for each activity
+ */
+$total_count = $DB->get_field_sql("
+    SELECT SUM(c.count)
+    FROM {tool_activitystatistics_counts} c
+    JOIN {tool_activitystatistics_lookup} l ON l.id = c.activityid
+    INNER JOIN (
+        SELECT activityid, MAX(timestamp) AS last_ts
+        FROM {tool_activitystatistics_counts}
+        GROUP BY activityid
+    ) lc ON c.activityid = lc.activityid AND c.timestamp = lc.last_ts
+");
+
+$lasttimestamp = $DB->get_field_sql("
+    SELECT MAX(timestamp) 
+    FROM {tool_activitystatistics_counts}
+");
+echo html_writer::start_div('row mb-4');
+
+$cards = [
+    ['title' => 'Total Activities', 'value' => $number_of_activities],
+    ['title' => 'Total Count', 'value' => number_format($total_count)],
+    ['title' => 'Last Update', 'value' => userdate($lasttimestamp)]
+];
+
+
+foreach ($cards as $card) {
+    echo html_writer::start_div('col-md-4');
+    echo html_writer::start_div('card text-center p-3 shadow-sm');
+    echo html_writer::tag('h4', $card['title']);
+    echo html_writer::tag('p', $card['value'], ['class' => 'h5']);
+    echo html_writer::end_div();
+    echo html_writer::end_div();
 }
-
-echo html_writer::tag('h2', 'Activity Statistics');
-echo html_writer::table($table);
+echo html_writer::end_div();
 
 echo $OUTPUT->footer();
