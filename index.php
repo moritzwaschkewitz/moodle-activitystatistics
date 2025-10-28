@@ -73,4 +73,36 @@ foreach ($cards as $card) {
 }
 echo html_writer::end_div();
 
+
+// --- Top Activities Table --- //
+$top_activities = $DB->get_records_sql("
+    SELECT l.activityname, c.count
+    FROM {tool_activitystatistics_lookup} l
+    JOIN {tool_activitystatistics_counts} c ON l.id = c.activityid
+    INNER JOIN (
+        SELECT activityid, MAX(timestamp) AS last_ts
+        FROM {tool_activitystatistics_counts}
+        GROUP BY activityid
+    ) lc ON c.activityid = lc.activityid AND c.timestamp = lc.last_ts
+    ORDER BY c.count DESC
+    LIMIT 5
+");
+
+echo html_writer::tag('h3', 'Top 5 Activities');
+
+$table = new html_table();
+$table->head = ['Rank', 'Activity', 'Count'];
+$table->data = [];
+$rank = 1;
+
+foreach ($top_activities as $record) {
+    $table->data[] = [
+        $rank++,
+        format_string($record->activityname),
+        format_string($record->count)
+    ];
+}
+
+echo html_writer::table($table);
+
 echo $OUTPUT->footer();
