@@ -54,7 +54,7 @@ class log_activities_count extends scheduled_task {
                     'count' => $count,
                     'timestamp' => time()
                 ]);
-                mtrace("Found new activity count for $mod->name: $lastlog -> $count");
+                mtrace("Found new activity count for $mod->name: $lastlog->count-> $count");
             }
         }
     }
