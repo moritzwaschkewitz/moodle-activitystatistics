@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use core\chart_line;
 use core\chart_pie;
 use core\chart_series;
 
@@ -155,6 +156,31 @@ if (empty($lookup_table) || empty($all_counts_history)) {
 
     echo html_writer::end_div(); // End of Column 2: Pie Chart (col-md-6)
     echo html_writer::end_div(); // End of row mt-4
+
+
+    // --- Column 3: Line Chart(Total Count Over Time) --- //
+    echo html_writer::start_div('row mt-5');
+    echo html_writer::start_div('col-12');
+    echo html_writer::tag('h3', 'Total Count Over Time');
+
+    $line_chart = new chart_line();
+    $line_chart->set_smooth(true);
+
+    $line_labels = [];
+    $line_data = [];
+    foreach ($history_total_sum as $timestamp => $sum) {
+        $line_labels[] = userdate($timestamp, '%Y-%m-%d %H:%M');
+        $line_data[] = $sum;
+    }
+
+    $line_series = new chart_series('Total Count', $line_data);
+    $line_chart->add_series($line_series);
+    $line_chart->set_labels($line_labels);
+
+    echo $OUTPUT->render($line_chart);
+
+    echo html_writer::end_div(); // End of col-12
+    echo html_writer::end_div(); // End of row mt-5
 }
 
 echo $OUTPUT->footer();
