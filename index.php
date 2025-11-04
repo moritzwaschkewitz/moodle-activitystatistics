@@ -32,7 +32,6 @@ echo $OUTPUT->header();
 
 global $DB;
 
-
 echo html_writer::tag('h2', 'Dashboard Overview');
 
 // --- Get ALL current activity data ONCE --- //
@@ -40,8 +39,8 @@ echo html_writer::tag('h2', 'Dashboard Overview');
  * since DB only logs changes the last timestamp for each activity is different
  * -> Inner select finds last timestamp for each activity
  */
-$latest_activity_data = $DB->get_records_sql("
-    SELECT l.activityname, c.count
+$activity_snapshot = $DB->get_records_sql("
+    SELECT l.activityname, c.count, c.timestamp
     FROM {tool_activitystatistics_lookup} l
     JOIN {tool_activitystatistics_counts} c ON l.id = c.activityid
     INNER JOIN (
@@ -51,25 +50,20 @@ $latest_activity_data = $DB->get_records_sql("
     ) lc ON c.activityid = lc.activityid AND c.timestamp = lc.last_ts
 ");
 
-if (empty($latest_activity_data)) {
+if (empty($activity_snapshot)) {
     echo html_writer::tag('p', 'No activity statistics found. Has the scheduled task run at least once?');
 } else {
     // --- General overview --- //
-    $number_of_activities = count($latest_activity_data);
-    $total_count = array_sum(array_column($latest_activity_data, 'count'));
+    $number_of_activities = count($activity_snapshot);
+    $total_count = array_sum(array_column($activity_snapshot, 'count'));
+    $lasttimestamp = max(array_column($activity_snapshot, 'timestamp'));
 
-    $lasttimestamp = $DB->get_field_sql("
-        SELECT MAX(timestamp) 
-        FROM {tool_activitystatistics_counts}
-    ");
     echo html_writer::start_div('row mb-4');
-
     $cards = [
         ['title' => 'Total Activities', 'value' => $number_of_activities],
         ['title' => 'Total Count', 'value' => number_format($total_count)],
         ['title' => 'Last Update', 'value' => userdate($lasttimestamp)]
     ];
-
 
     foreach ($cards as $card) {
         echo html_writer::start_div('col-md-4');
@@ -83,12 +77,11 @@ if (empty($latest_activity_data)) {
 
 
     // --- Sort data once for both Table and Chart --- //
-    usort($latest_activity_data, function($a, $b) {
+    usort($activity_snapshot, function($a, $b) {
         return $b->count <=> $a->count;
     });
-    $top_activities = array_slice($latest_activity_data, 0, 5);
+    $top_activities = array_slice($activity_snapshot, 0, 5);
 
-    // --- Layout for top-5-table and pie chart --- //
     echo html_writer::start_div('row mt-4');
 
     // --- Column 1: Top Activities Table --- //
@@ -108,7 +101,7 @@ if (empty($latest_activity_data)) {
         ];
     }
     echo html_writer::table($table);
-    echo html_writer::end_div(); // Ende col-md-6
+    echo html_writer::end_div(); // End of Column 1: Top Activities Table (col-md-6)
 
 
     // --- Column 2: Pie Chart --- //
@@ -118,21 +111,20 @@ if (empty($latest_activity_data)) {
     $pie_labels = [];
     $pie_data = [];
 
-    foreach ($latest_activity_data as $record) {
+    foreach ($activity_snapshot as $record) {
         $pie_labels[] = format_string($record->activityname);
         $pie_data[] = (int)$record->count;
     }
 
     $pie = new chart_pie();
     $pie->set_labels($pie_labels);
-
     $series = new chart_series('Activity Count', $pie_data);
     $pie->add_series($series);
 
     echo $OUTPUT->render($pie);
 
-    echo html_writer::end_div(); // Ende col-md-6
-    echo html_writer::end_div(); // Ende row
+    echo html_writer::end_div(); // End of Column 2: Pie Chart (col-md-6)
+    echo html_writer::end_div(); // End of row mt-4
 }
 
 echo $OUTPUT->footer();
