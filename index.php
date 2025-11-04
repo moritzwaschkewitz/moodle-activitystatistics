@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use core\chart_pie;
+use core\chart_series;
+
 require_once(__DIR__ . '/../../../config.php');
 
 require_login();
@@ -85,6 +88,11 @@ if (empty($latest_activity_data)) {
     });
     $top_activities = array_slice($latest_activity_data, 0, 5);
 
+    // --- Layout for top-5-table and pie chart --- //
+    echo html_writer::start_div('row mt-4');
+
+    // --- Column 1: Top Activities Table --- //
+    echo html_writer::start_div('col-md-6');
     echo html_writer::tag('h3', 'Top 5 Activities');
 
     $table = new html_table();
@@ -99,8 +107,32 @@ if (empty($latest_activity_data)) {
             format_string($record->count)
         ];
     }
-
     echo html_writer::table($table);
+    echo html_writer::end_div(); // Ende col-md-6
+
+
+    // --- Column 2: Pie Chart --- //
+    echo html_writer::start_div('col-md-6');
+    echo html_writer::tag('h3', 'Activity Distribution');
+
+    $pie_labels = [];
+    $pie_data = [];
+
+    foreach ($latest_activity_data as $record) {
+        $pie_labels[] = format_string($record->activityname);
+        $pie_data[] = (int)$record->count;
+    }
+
+    $pie = new chart_pie();
+    $pie->set_labels($pie_labels);
+
+    $series = new chart_series('Activity Count', $pie_data);
+    $pie->add_series($series);
+
+    echo $OUTPUT->render($pie);
+
+    echo html_writer::end_div(); // Ende col-md-6
+    echo html_writer::end_div(); // Ende row
 }
 
 echo $OUTPUT->footer();
