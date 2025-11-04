@@ -40,7 +40,7 @@ echo html_writer::tag('h2', 'Dashboard Overview');
  * -> Inner select finds last timestamp for each activity
  */
 $activity_snapshot = $DB->get_records_sql("
-    SELECT l.activityname, c.count, c.timestamp
+    SELECT l.id, l.activityname, c.count, c.timestamp
     FROM {tool_activitystatistics_lookup} l
     JOIN {tool_activitystatistics_counts} c ON l.id = c.activityid
     INNER JOIN (
@@ -94,9 +94,12 @@ if (empty($activity_snapshot)) {
     $rank = 1;
 
     foreach ($top_activities as $record) {
+        $detail_url = new moodle_url('/admin/tool/activitystatistics/detail.php', ['id' => $record->id]);
+        $activity_link = html_writer::link($detail_url, format_string($record->activityname));
+
         $table->data[] = [
             $rank++,
-            format_string($record->activityname),
+            $activity_link, // Link statt nur Text
             format_string($record->count)
         ];
     }
