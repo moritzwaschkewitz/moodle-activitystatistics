@@ -79,12 +79,11 @@ if (empty($latest_activity_data)) {
     echo html_writer::end_div();
 
 
-    // --- Top Activities Table --- //
-    $top_activities = $latest_activity_data;
-    usort($top_activities, function($a, $b) {
+    // --- Sort data once for both Table and Chart --- //
+    usort($latest_activity_data, function($a, $b) {
         return $b->count <=> $a->count;
     });
-    $top_activities = array_slice($top_activities, 0, 5);
+    $top_activities = array_slice($latest_activity_data, 0, 5);
 
     echo html_writer::tag('h3', 'Top 5 Activities');
 
