@@ -34,29 +34,56 @@ global $DB;
 
 echo html_writer::tag('h2', 'Dashboard Overview');
 
-// --- Get ALL current activity data ONCE --- //
-/*
- * since DB only logs changes the last timestamp for each activity is different
- * -> Inner select finds last timestamp for each activity
- */
-$activity_snapshot = $DB->get_records_sql("
-    SELECT l.id, l.activityname, c.count, c.timestamp
-    FROM {tool_activitystatistics_lookup} l
-    JOIN {tool_activitystatistics_counts} c ON l.id = c.activityid
-    INNER JOIN (
-        SELECT activityid, MAX(timestamp) AS last_ts
-        FROM {tool_activitystatistics_counts}
-        GROUP BY activityid
-    ) lc ON c.activityid = lc.activityid AND c.timestamp = lc.last_ts
-");
+$lookup_table = $DB->get_records_menu('tool_activitystatistics_lookup');
+$all_counts_history = $DB->get_records('tool_activitystatistics_counts', [], 'timestamp ASC');
 
-if (empty($activity_snapshot)) {
+if (empty($lookup_table) || empty($all_counts_history)) {
     echo html_writer::tag('p', 'No activity statistics found. Has the scheduled task run at least once?');
 } else {
+    $current_activity_snapshot = [];
+    $history_total_sum = [];
+    $history_deltas = [];
+
+    $total_sum = 0;
+    $last_timestamp = null;
+    $last_timestamp_total_sum = 0;
+
+    foreach ($all_counts_history as $record) {
+        // new timestamp block begins: save new sum and delta
+        if ($record->timestamp !== $last_timestamp && $last_timestamp !== null) {
+            $delta = $total_sum - $last_timestamp_total_sum;
+
+            $history_total_sum[$last_timestamp] = $total_sum;
+            $history_deltas[$last_timestamp] = $delta;
+
+            $last_timestamp_total_sum = $total_sum;
+        }
+
+        $activity_id = $record->activityid;
+
+        $old_count = $current_activity_snapshot[$activity_id]->count ?? 0;
+        $total_sum = ($total_sum - $old_count) + $record->count;
+
+        $current_activity_snapshot[$activity_id] = (object)[
+            'id' => $activity_id,
+            'activityname' => $lookup_table[$activity_id] ?? 'Unkown Activity, check Lookup-table',
+            'count' => $record->count,
+            'timestamp' => $record->timestamp
+        ];
+        $last_timestamp = $record->timestamp;
+    }
+
+    // save last timestamp block
+    if ($last_timestamp !== null) {
+        $delta = $total_sum - $last_timestamp_total_sum;
+        $history_total_sum[$last_timestamp] = $total_sum;
+        $history_deltas[$last_timestamp] = $delta;
+    }
+
     // --- General overview --- //
-    $number_of_activities = count($activity_snapshot);
-    $total_count = array_sum(array_column($activity_snapshot, 'count'));
-    $lasttimestamp = max(array_column($activity_snapshot, 'timestamp'));
+    $number_of_activities = count($current_activity_snapshot);
+    $total_count = array_sum(array_column($current_activity_snapshot, 'count'));
+    $lasttimestamp = max(array_column($current_activity_snapshot, 'timestamp'));
 
     echo html_writer::start_div('row mb-4');
     $cards = [
@@ -77,10 +104,10 @@ if (empty($activity_snapshot)) {
 
 
     // --- Sort data once for both Table and Chart --- //
-    usort($activity_snapshot, function($a, $b) {
+    usort($current_activity_snapshot, function($a, $b) {
         return $b->count <=> $a->count;
     });
-    $top_activities = array_slice($activity_snapshot, 0, 5);
+    $top_activities = array_slice($current_activity_snapshot, 0, 5);
 
     echo html_writer::start_div('row mt-4');
 
@@ -114,7 +141,7 @@ if (empty($activity_snapshot)) {
     $pie_labels = [];
     $pie_data = [];
 
-    foreach ($activity_snapshot as $record) {
+    foreach ($current_activity_snapshot as $record) {
         $pie_labels[] = format_string($record->activityname);
         $pie_data[] = (int)$record->count;
     }
