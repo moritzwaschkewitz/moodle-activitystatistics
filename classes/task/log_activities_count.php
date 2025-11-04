@@ -29,6 +29,8 @@ class log_activities_count extends scheduled_task {
 
         $modules = $DB->get_records('modules');
 
+        $timestamp = time();
+
         foreach ($modules as $mod) {
             $lookup = $DB->get_record('tool_activitystatistics_lookup', ['activityname' => $mod->name]);
             if (!$lookup) {
@@ -52,7 +54,7 @@ class log_activities_count extends scheduled_task {
                 $DB->insert_record('tool_activitystatistics_counts', [
                     'activityid' => $lookupid,
                     'count' => $count,
-                    'timestamp' => time()
+                    'timestamp' => $timestamp
                 ]);
                 mtrace("Found new activity count for $mod->name: $lastlog->count-> $count");
             }
