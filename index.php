@@ -32,23 +32,27 @@ global $DB;
 
 echo html_writer::tag('h2', 'Dashboard Overview');
 
-// --- General overview --- //
-$number_of_activities = $DB->count_records('tool_activitystatistics_lookup');
-
+// --- Get ALL current activity data ONCE --- //
 /*
  * since DB only logs changes the last timestamp for each activity is different
  * -> Inner select finds last timestamp for each activity
  */
-$total_count = $DB->get_field_sql("
-    SELECT SUM(c.count)
-    FROM {tool_activitystatistics_counts} c
-    JOIN {tool_activitystatistics_lookup} l ON l.id = c.activityid
+$latest_activity_data = $DB->get_records_sql("
+    SELECT l.activityname, c.count
+    FROM {tool_activitystatistics_lookup} l
+    JOIN {tool_activitystatistics_counts} c ON l.id = c.activityid
     INNER JOIN (
         SELECT activityid, MAX(timestamp) AS last_ts
         FROM {tool_activitystatistics_counts}
         GROUP BY activityid
     ) lc ON c.activityid = lc.activityid AND c.timestamp = lc.last_ts
 ");
+
+
+// --- General overview --- //
+$number_of_activities = count($latest_activity_data);
+
+$total_count = array_sum(array_column($latest_activity_data, 'count'));
 
 $lasttimestamp = $DB->get_field_sql("
     SELECT MAX(timestamp) 
@@ -75,18 +79,11 @@ echo html_writer::end_div();
 
 
 // --- Top Activities Table --- //
-$top_activities = $DB->get_records_sql("
-    SELECT l.activityname, c.count
-    FROM {tool_activitystatistics_lookup} l
-    JOIN {tool_activitystatistics_counts} c ON l.id = c.activityid
-    INNER JOIN (
-        SELECT activityid, MAX(timestamp) AS last_ts
-        FROM {tool_activitystatistics_counts}
-        GROUP BY activityid
-    ) lc ON c.activityid = lc.activityid AND c.timestamp = lc.last_ts
-    ORDER BY c.count DESC
-    LIMIT 5
-");
+$top_activities = $latest_activity_data;
+usort($top_activities, function($a, $b) {
+    return $b->count <=> $a->count;
+});
+$top_activities = array_slice($top_activities, 0, 5);
 
 echo html_writer::tag('h3', 'Top 5 Activities');
 
