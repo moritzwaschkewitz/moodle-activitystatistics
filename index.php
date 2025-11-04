@@ -48,58 +48,60 @@ $latest_activity_data = $DB->get_records_sql("
     ) lc ON c.activityid = lc.activityid AND c.timestamp = lc.last_ts
 ");
 
+if (empty($latest_activity_data)) {
+    echo html_writer::tag('p', 'No activity statistics found. Has the scheduled task run at least once?');
+} else {
+    // --- General overview --- //
+    $number_of_activities = count($latest_activity_data);
+    $total_count = array_sum(array_column($latest_activity_data, 'count'));
 
-// --- General overview --- //
-$number_of_activities = count($latest_activity_data);
+    $lasttimestamp = $DB->get_field_sql("
+        SELECT MAX(timestamp) 
+        FROM {tool_activitystatistics_counts}
+    ");
+    echo html_writer::start_div('row mb-4');
 
-$total_count = array_sum(array_column($latest_activity_data, 'count'));
-
-$lasttimestamp = $DB->get_field_sql("
-    SELECT MAX(timestamp) 
-    FROM {tool_activitystatistics_counts}
-");
-echo html_writer::start_div('row mb-4');
-
-$cards = [
-    ['title' => 'Total Activities', 'value' => $number_of_activities],
-    ['title' => 'Total Count', 'value' => number_format($total_count)],
-    ['title' => 'Last Update', 'value' => userdate($lasttimestamp)]
-];
-
-
-foreach ($cards as $card) {
-    echo html_writer::start_div('col-md-4');
-    echo html_writer::start_div('card text-center p-3 shadow-sm');
-    echo html_writer::tag('h4', $card['title']);
-    echo html_writer::tag('p', $card['value'], ['class' => 'h5']);
-    echo html_writer::end_div();
-    echo html_writer::end_div();
-}
-echo html_writer::end_div();
-
-
-// --- Top Activities Table --- //
-$top_activities = $latest_activity_data;
-usort($top_activities, function($a, $b) {
-    return $b->count <=> $a->count;
-});
-$top_activities = array_slice($top_activities, 0, 5);
-
-echo html_writer::tag('h3', 'Top 5 Activities');
-
-$table = new html_table();
-$table->head = ['Rank', 'Activity', 'Count'];
-$table->data = [];
-$rank = 1;
-
-foreach ($top_activities as $record) {
-    $table->data[] = [
-        $rank++,
-        format_string($record->activityname),
-        format_string($record->count)
+    $cards = [
+        ['title' => 'Total Activities', 'value' => $number_of_activities],
+        ['title' => 'Total Count', 'value' => number_format($total_count)],
+        ['title' => 'Last Update', 'value' => userdate($lasttimestamp)]
     ];
-}
 
-echo html_writer::table($table);
+
+    foreach ($cards as $card) {
+        echo html_writer::start_div('col-md-4');
+        echo html_writer::start_div('card text-center p-3 shadow-sm');
+        echo html_writer::tag('h4', $card['title']);
+        echo html_writer::tag('p', $card['value'], ['class' => 'h5']);
+        echo html_writer::end_div();
+        echo html_writer::end_div();
+    }
+    echo html_writer::end_div();
+
+
+    // --- Top Activities Table --- //
+    $top_activities = $latest_activity_data;
+    usort($top_activities, function($a, $b) {
+        return $b->count <=> $a->count;
+    });
+    $top_activities = array_slice($top_activities, 0, 5);
+
+    echo html_writer::tag('h3', 'Top 5 Activities');
+
+    $table = new html_table();
+    $table->head = ['Rank', 'Activity', 'Count'];
+    $table->data = [];
+    $rank = 1;
+
+    foreach ($top_activities as $record) {
+        $table->data[] = [
+            $rank++,
+            format_string($record->activityname),
+            format_string($record->count)
+        ];
+    }
+
+    echo html_writer::table($table);
+}
 
 echo $OUTPUT->footer();
