@@ -39,7 +39,10 @@ class log_activities_count extends scheduled_task {
                 $lookupid = $lookup->id;
             }
 
-            $count = $DB->count_records('course_modules', ['module' => $mod->id]);
+            $count = $DB->count_records('course_modules', [
+                'module' => $mod->id,
+                'deletioninprogress' => 0
+            ]);
             mtrace("$mod->name: $count");
 
             $lastlog = $DB->get_record_sql(
