@@ -32,13 +32,6 @@ class log_activities_count extends scheduled_task {
         $timestamp = time();
 
         foreach ($modules as $mod) {
-            $lookup = $DB->get_record('tool_activitystatistics_lookup', ['activityname' => $mod->name]);
-            if (!$lookup) {
-                $lookupid = $DB->insert_record('tool_activitystatistics_lookup', ['activityname' => $mod->name]);
-            } else {
-                $lookupid = $lookup->id;
-            }
-
             $count = $DB->count_records('course_modules', [
                 'module' => $mod->id,
                 'deletioninprogress' => 0
@@ -50,12 +43,12 @@ class log_activities_count extends scheduled_task {
                  WHERE activityid = ? 
                  ORDER BY timestamp DESC 
                  LIMIT 1',
-                [$lookupid]
+                [$mod->id]
             );
 
             if (!$lastlog || $lastlog->count != $count) {
                 $DB->insert_record('tool_activitystatistics_counts', [
-                    'activityid' => $lookupid,
+                    'activityid' => $mod->id,
                     'count' => $count,
                     'timestamp' => $timestamp
                 ]);

@@ -35,10 +35,10 @@ global $DB;
 
 echo html_writer::tag('h2', 'Dashboard Overview');
 
-$lookup_table = $DB->get_records_menu('tool_activitystatistics_lookup');
+$modules = $DB->get_records('modules');
 $all_counts_history = $DB->get_records('tool_activitystatistics_counts', [], 'timestamp ASC');
 
-if (empty($lookup_table) || empty($all_counts_history)) {
+if (empty($all_counts_history)) {
     echo html_writer::tag('p', 'No activity statistics found. Has the scheduled task run at least once?');
 } else {
     $current_activity_snapshot = [];
@@ -67,7 +67,7 @@ if (empty($lookup_table) || empty($all_counts_history)) {
 
         $current_activity_snapshot[$activity_id] = (object)[
             'id' => $activity_id,
-            'activityname' => $lookup_table[$activity_id] ?? 'Unkown Activity, check Lookup-table',
+            'activityname' => $modules[$activity_id] ?? 'Unkown Activity, check Lookup-table',
             'count' => $record->count,
             'timestamp' => $record->timestamp
         ];
