@@ -67,7 +67,7 @@ if (empty($all_counts_history)) {
 
         $current_activity_snapshot[$activity_id] = (object)[
             'id' => $activity_id,
-            'activityname' => $modules[$activity_id] ?? 'Unkown Activity, check Lookup-table',
+            'activityname' => isset($modules[$activity_id]) ? $modules[$activity_id]->name : 'Unknown Activity',
             'count' => $record->count,
             'timestamp' => $record->timestamp
         ];
