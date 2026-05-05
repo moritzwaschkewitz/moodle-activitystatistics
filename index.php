@@ -26,20 +26,18 @@ require_capability('tool/activitystatistics:view', $context);
 
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/admin/tool/activitystatistics/index.php'));
-$PAGE->set_title('Hello World - Title');
-$PAGE->set_heading('Hello World - Heading');
+$PAGE->set_title(get_string('index:title', 'tool_activitystatistics'));
+$PAGE->set_heading(get_string('index:heading', 'tool_activitystatistics'));
 
 echo $OUTPUT->header();
 
 global $DB;
 
-echo html_writer::tag('h2', 'Dashboard Overview');
-
 $modules = $DB->get_records('modules');
 $all_counts_history = $DB->get_records('tool_activitystatistics_counts', [], 'timestamp ASC');
 
 if (empty($all_counts_history)) {
-    echo html_writer::tag('p', 'No activity statistics found. Has the scheduled task run at least once?');
+    echo html_writer::tag('p', get_string('index:no_data_error', 'tool_activitystatistics'));
 } else {
     $current_activity_snapshot = [];
     $history_total_sum = [];
@@ -67,7 +65,7 @@ if (empty($all_counts_history)) {
 
         $current_activity_snapshot[$activity_id] = (object)[
             'id' => $activity_id,
-            'activityname' => isset($modules[$activity_id]) ? $modules[$activity_id]->name : 'Unknown Activity',
+            'activityname' => isset($modules[$activity_id]) ? $modules[$activity_id]->name : get_string('index:unknown_activity_error', 'tool_activitystatistics'),
             'count' => $record->count,
             'timestamp' => $record->timestamp
         ];
@@ -86,11 +84,16 @@ if (empty($all_counts_history)) {
     $total_count = array_sum(array_column($current_activity_snapshot, 'count'));
     $lasttimestamp = max(array_column($current_activity_snapshot, 'timestamp'));
 
+    echo html_writer::tag('h2', get_string('index:overview:heading', 'tool_activitystatistics'));
+
     echo html_writer::start_div('row mb-4');
     $cards = [
-        ['title' => 'Total Activities', 'value' => $number_of_activities],
-        ['title' => 'Total Count', 'value' => number_format($total_count)],
-        ['title' => 'Last Update', 'value' => userdate($lasttimestamp)]
+        ['title' => get_string('index:overview:total_activities', 'tool_activitystatistics'),
+            'value' => $number_of_activities],
+        ['title' => get_string('index:overview:total_count', 'tool_activitystatistics'),
+            'value' => number_format($total_count)],
+        ['title' => get_string('index:overview:last_update', 'tool_activitystatistics'),
+            'value' => userdate($lasttimestamp)]
     ];
 
     foreach ($cards as $card) {
@@ -114,10 +117,13 @@ if (empty($all_counts_history)) {
 
     // --- Column 1: Top Activities Table --- //
     echo html_writer::start_div('col-md-6');
-    echo html_writer::tag('h3', 'Top 5 Activities');
+    echo html_writer::tag('h3', get_string('index:top5:heading', 'tool_activitystatistics'));
 
     $table = new html_table();
-    $table->head = ['Rank', 'Activity', 'Count'];
+    $table->head = [
+        get_string('index:top5:rank', 'tool_activitystatistics'),
+        get_string('index:top5:activity', 'tool_activitystatistics'),
+        get_string('index:top5:count', 'tool_activitystatistics')];
     $table->data = [];
     $rank = 1;
 
@@ -137,7 +143,7 @@ if (empty($all_counts_history)) {
 
     // --- Column 2: Pie Chart --- //
     echo html_writer::start_div('col-md-6');
-    echo html_writer::tag('h3', 'Activity Distribution');
+    echo html_writer::tag('h3', get_string('index:activity_distribution:heading', 'tool_activitystatistics'));
 
     $pie_labels = [];
     $pie_data = [];
@@ -149,7 +155,9 @@ if (empty($all_counts_history)) {
 
     $pie = new chart_pie();
     $pie->set_labels($pie_labels);
-    $series = new chart_series('Activity Count', $pie_data);
+    $series = new chart_series(
+        get_string('index:activity_distribution:chart_title', 'tool_activitystatistics'),
+        $pie_data);
     $pie->add_series($series);
 
     echo $OUTPUT->render($pie);
@@ -161,7 +169,7 @@ if (empty($all_counts_history)) {
     // --- Column 3: Line Chart(Total Count Over Time) --- //
     echo html_writer::start_div('row mt-5');
     echo html_writer::start_div('col-12');
-    echo html_writer::tag('h3', 'Total Count Over Time');
+    echo html_writer::tag('h3', get_string('index:total_count:heading', 'tool_activitystatistics'));
 
     $line_chart = new chart_line();
     $line_chart->set_smooth(true);
@@ -173,7 +181,9 @@ if (empty($all_counts_history)) {
         $line_data[] = $sum;
     }
 
-    $line_series = new chart_series('Total Count', $line_data);
+    $line_series = new chart_series(
+        get_string('index:total_count:title', 'tool_activitystatistics'),
+        $line_data);
     $line_chart->add_series($line_series);
     $line_chart->set_labels($line_labels);
 

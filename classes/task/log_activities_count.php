@@ -21,7 +21,7 @@ use core\task\scheduled_task;
 class log_activities_count extends scheduled_task {
 
     public function get_name() {
-        return get_string('logactivitiescount', 'tool_activitystatistics');
+        return get_string('log_activities_count', 'tool_activitystatistics');
     }
 
     public function execute() {
