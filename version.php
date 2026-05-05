@@ -18,7 +18,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_activitystatistics';
 
-$plugin->version = 2025102700;
+$plugin->version = 2026060612;
 $plugin->release = 'v0.1.0';
 $plugin->maturity = MATURITY_ALPHA;
 

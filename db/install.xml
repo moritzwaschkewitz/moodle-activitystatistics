@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="admin/tool/activitystatistics/db" VERSION="20251106" COMMENT="XMLDB file for Moodle admin/tool/activitystatistics"
+<XMLDB PATH="admin/tool/activitystatistics/db" VERSION="20260505" COMMENT="XMLDB file for Moodle admin/tool/activitystatistics"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
@@ -7,14 +7,17 @@
     <TABLE NAME="tool_activitystatistics_counts" COMMENT="logs the counts of different activities">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="activityid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="activityid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="count" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="timestamp" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timestamp" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="activity_fk" TYPE="foreign" FIELDS="activityid" REFTABLE="modules" REFFIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="activityid_ix" UNIQUE="false" FIELDS="activityid"/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>
