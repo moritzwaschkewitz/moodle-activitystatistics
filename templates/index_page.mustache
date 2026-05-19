@@ -1,0 +1,26 @@
+<div class="tool_activitystatistics-container">
+    <h2>{{#str}} index:overview:heading, tool_activitystatistics {{/str}}</h2>
+
+    {{#overview_cards}}s
+        {{> tool_activitystatistics/overview_cards }}
+    {{/overview_cards}}
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h3>{{#str}} index:top5:heading, tool_activitystatistics {{/str}}</h3>
+            {{{ top_table }}}
+        </div>
+        <div class="col-md-6">
+            <h3>{{#str}} index:activity_distribution:heading, tool_activitystatistics {{/str}}</h3>
+            {{{ pie_chart }}}
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>{{#str}} index:total_count:heading, tool_activitystatistics {{/str}}</h3>
+            {{{ line_chart }}}
+        </div>
+    </div>
+
+</div>
