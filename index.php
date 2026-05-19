@@ -46,46 +46,6 @@ if ($overview_stats->last_update === false) {
     exit;
 }
 
-$current_activity_snapshot = [];
-$history_total_sum = [];
-$history_deltas = [];
-
-$total_sum = 0;
-$last_timestamp = null;
-$last_timestamp_total_sum = 0;
-
-foreach ($all_counts_history as $record) {
-    // new timestamp block begins: save new sum and delta
-    if ($record->timestamp !== $last_timestamp && $last_timestamp !== null) {
-        $delta = $total_sum - $last_timestamp_total_sum;
-
-        $history_total_sum[$last_timestamp] = $total_sum;
-        $history_deltas[$last_timestamp] = $delta;
-
-        $last_timestamp_total_sum = $total_sum;
-    }
-
-    $activity_id = $record->activityid;
-
-    $old_count = $current_activity_snapshot[$activity_id]->count ?? 0;
-    $total_sum = ($total_sum - $old_count) + $record->count;
-
-    $current_activity_snapshot[$activity_id] = (object)[
-        'id' => $activity_id,
-        'activityname' => isset($modules[$activity_id]) ? $modules[$activity_id]->name : get_string('index:unknown_activity_error', 'tool_activitystatistics'),
-        'count' => $record->count,
-        'timestamp' => $record->timestamp
-    ];
-    $last_timestamp = $record->timestamp;
-}
-
-// save last timestamp block
-if ($last_timestamp !== null) {
-    $delta = $total_sum - $last_timestamp_total_sum;
-    $history_total_sum[$last_timestamp] = $total_sum;
-    $history_deltas[$last_timestamp] = $delta;
-}
-
 // --- General overview --- //
 echo html_writer::tag('h2', get_string('index:overview:heading', 'tool_activitystatistics'));
 
@@ -109,17 +69,12 @@ foreach ($cards as $card) {
 }
 echo html_writer::end_div();
 
+// --- Row 1, Column 1: Top Activities Table --- //
+$current_activity_counts = data_provider::get_current_activity_counts();
+$top_activities = array_slice($current_activity_counts, 0, 5);
 
-// --- Sort data once for both Table and Chart --- //
-usort($current_activity_snapshot, function($a, $b) {
-    return $b->count <=> $a->count;
-});
-$top_activities = array_slice($current_activity_snapshot, 0, 5);
-
-echo html_writer::start_div('row mt-4');
-
-// --- Column 1: Top Activities Table --- //
-echo html_writer::start_div('col-md-6');
+echo html_writer::start_div('row mt-4'); // Row 1: Top5+Pie
+echo html_writer::start_div('col-md-6'); // Row 1, Col 1: Top5
 echo html_writer::tag('h3', get_string('index:top5:heading', 'tool_activitystatistics'));
 
 $table = new html_table();
@@ -136,7 +91,7 @@ foreach ($top_activities as $record) {
 
     $table->data[] = [
         $rank++,
-        $activity_link, // Link statt nur Text
+        $activity_link,
         format_string($record->count)
     ];
 }
@@ -144,14 +99,14 @@ echo html_writer::table($table);
 echo html_writer::end_div(); // End of Column 1: Top Activities Table (col-md-6)
 
 
-// --- Column 2: Pie Chart --- //
-echo html_writer::start_div('col-md-6');
+// --- Row 1, Column 2: Pie Chart --- //
+echo html_writer::start_div('col-md-6'); // Row 1, Col 2: Pie Chart
 echo html_writer::tag('h3', get_string('index:activity_distribution:heading', 'tool_activitystatistics'));
 
 $pie_labels = [];
 $pie_data = [];
 
-foreach ($current_activity_snapshot as $record) {
+foreach ($current_activity_counts as $record) {
     $pie_labels[] = format_string($record->activityname);
     $pie_data[] = (int)$record->count;
 }
@@ -166,10 +121,12 @@ $pie->add_series($series);
 echo $OUTPUT->render($pie);
 
 echo html_writer::end_div(); // End of Column 2: Pie Chart (col-md-6)
-echo html_writer::end_div(); // End of row mt-4
+echo html_writer::end_div(); // End of Row 1: Top5+Pie (row mt-4)
 
 
-// --- Column 3: Line Chart(Total Count Over Time) --- //
+// --- Row 2: Line Chart(Total Count over Time) --- //
+$history_data = data_provider::get_total_count_history();
+
 echo html_writer::start_div('row mt-5');
 echo html_writer::start_div('col-12');
 echo html_writer::tag('h3', get_string('index:total_count:heading', 'tool_activitystatistics'));
@@ -179,21 +136,24 @@ $line_chart->set_smooth(true);
 
 $line_labels = [];
 $line_data = [];
-foreach ($history_total_sum as $timestamp => $sum) {
-    $line_labels[] = userdate($timestamp, '%Y-%m-%d %H:%M');
-    $line_data[] = $sum;
+
+foreach ($history_data as $timestamp => $record) {
+    $line_labels[] = userdate($timestamp, '%d.%m. %H:%M');
+    $line_data[] = $record->total_sum;
 }
 
 $line_series = new chart_series(
-    get_string('index:total_count:title', 'tool_activitystatistics'),
-    $line_data);
+    get_string('index:total_count:chart_title', 'tool_activitystatistics'),
+    $line_data
+);
 $line_chart->add_series($line_series);
 $line_chart->set_labels($line_labels);
 
 echo $OUTPUT->render($line_chart);
 
-echo html_writer::end_div(); // End of col-12
-echo html_writer::end_div(); // End of row mt-5
+// End of Row 2: Total Count over Time
+echo html_writer::end_div(); // col-12
+echo html_writer::end_div(); // row mt-5
 
 
 echo $OUTPUT->footer();
