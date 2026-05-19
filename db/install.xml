@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <XMLDB PATH="admin/tool/activitystatistics/db" VERSION="20260505" COMMENT="XMLDB file for Moodle admin/tool/activitystatistics"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
     <TABLE NAME="tool_activitystatistics_counts" COMMENT="logs the counts of different activities">
@@ -16,7 +16,7 @@
         <KEY NAME="activity_fk" TYPE="foreign" FIELDS="activityid" REFTABLE="modules" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="activityid_ix" UNIQUE="false" FIELDS="activityid"/>
+        <INDEX NAME="activityid_timestamp_ix" UNIQUE="false" FIELDS="activityid, timestamp" COMMENT="Composite indexing of activityid and timestamp"/>
       </INDEXES>
     </TABLE>
   </TABLES>
