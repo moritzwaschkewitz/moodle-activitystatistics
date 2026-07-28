@@ -45,3 +45,12 @@ $string['index:activity_distribution:chart_title'] = 'Activity Count';
 /* index.php - Total Count Line Chart */
 $string['index:total_count:heading'] = 'Total Count Over Time';
 $string['index:total_count:chart_title'] = 'Total Activity Count';
+
+
+$string['filter'] = 'Filter';
+$string['selectallmodules'] = 'Alle auswählen';
+$string['selectnonemodules'] = 'Keine auswählen';
+$string['applyfilter'] = 'Filter anwenden';
+
+$string['index:multi_line_count:heading'] = 'ABC';
+

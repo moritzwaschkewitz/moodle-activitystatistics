@@ -24,9 +24,12 @@ $context = context_system::instance();
 require_capability('tool/activitystatistics:view', $context);
 
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/admin/tool/activitystatistics/index.php'));
+$actionurl = new moodle_url('/admin/tool/activitystatistics/index.php');
+$PAGE->set_url($actionurl);
 $PAGE->set_title(get_string('index:title', 'tool_activitystatistics'));
 $PAGE->set_heading(get_string('index:heading', 'tool_activitystatistics'));
+
+
 
 
 $overview_stats = data_provider::get_overview_stats();
@@ -37,10 +40,33 @@ if ($overview_stats->last_update === false) {
     exit;
 }
 
+// Neu: ausgewählte Module aus dem Formular lesen.
+// Das Formular liefert Checkboxen als modules[forum]=1, modules[quiz]=0, ...
+// Wenn noch nicht gefiltert wurde, ist $selectedmodules = null (=> Default "alle an" in der Form).
+$selectedmodules = optional_param_array('modules', null, PARAM_BOOL);
+
+$filtersubmitted = optional_param('filtersubmitted', 0, PARAM_INT);
+
+if ($filtersubmitted) {
+    // Formular wurde abgeschickt (auch wenn keine Checkboxen gesetzt sind).
+    $selectedmodules = optional_param_array('modules', [], PARAM_BOOL); // kann leer sein
+} else {
+    // Erster Seitenaufruf: null => Form setzt Default "alle an".
+    $selectedmodules = null;
+}
+
+$enabledmodnames = null;
+if (is_array($selectedmodules)) {
+    $enabledmodnames = array_keys(array_filter($selectedmodules)); // nur checked
+}
+
 $page_output = new index_page(
     $overview_stats,
     data_provider::get_current_activity_counts(),
-    data_provider::get_total_count_history()
+    data_provider::get_total_count_history(),
+    $actionurl,
+    $selectedmodules,
+    data_provider::get_activity_counts_history_by_module($enabledmodnames)
 );
 
 echo $OUTPUT->header();

@@ -1,7 +1,7 @@
 <div class="tool_activitystatistics-container">
     <h2>{{#str}} index:overview:heading, tool_activitystatistics {{/str}}</h2>
 
-    {{#overview_cards}}s
+    {{#overview_cards}}
         {{> tool_activitystatistics/overview_cards }}
     {{/overview_cards}}
 
@@ -20,6 +20,21 @@
         <div class="col-12">
             <h3>{{#str}} index:total_count:heading, tool_activitystatistics {{/str}}</h3>
             {{{ line_chart }}}
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title">{{str_multi_title}}</h5>
+        </div>
+        <div class="card-body">
+            <div class="filter-form-container">
+                {{{filter_form}}}
+            </div>
+            <div class="col-12">
+                <h3>{{#str}} index:multi_line_count:heading, tool_activitystatistics {{/str}}</h3>
+                {{{ multi_line_chart }}}
+            </div>
         </div>
     </div>
 

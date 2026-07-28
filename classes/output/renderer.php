@@ -37,4 +37,12 @@ class renderer extends plugin_renderer_base {
     protected function render_index_page(index_page $page) {
         return $this->render_from_template('tool_activitystatistics/index_page', $page->export_for_template($this));
     }
+
+    /**
+     * Renders the filter form using the standard moodleform display.
+     */
+    public function render_renderable_filter_form(\tool_activitystatistics\output\renderable_filter_form $f): string {
+        $data = $f->export_for_template($this);
+        return $this->render_from_template('tool_activitystatistics/filter_form', $data);
+    }
 }

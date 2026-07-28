@@ -106,4 +106,39 @@ class data_provider {
         // get_records_sql gibt ein Array zurück, bei dem die erste Spalte (timestamp) der Array-Key ist.
         return $DB->get_records_sql($sql);
     }
+
+    /**
+     * Retrieves the historical progression of activity counts per module over time.
+     *
+     * Returns rows with:
+     * - int $timestamp
+     * - string $activityname (e.g. 'forum', 'assign')
+     * - int $count
+     *
+     * @param string[]|null $modnames Optional list of module names to include. Null = all.
+     * @return \stdClass[] list of records
+     */
+    public static function get_activity_counts_history_by_module(?array $modnames = null): array {
+        global $DB;
+
+        $params = [];
+        $where = '';
+
+        if (!empty($modnames)) {
+            list($insql, $inparams) = $DB->get_in_or_equal($modnames, SQL_PARAMS_NAMED, 'mn');
+            $where = "WHERE m.name $insql";
+            $params = $inparams;
+        }
+
+        $sql = "SELECT c.id,                -- WICHTIG: eindeutiger Key für get_records_sql
+                   c.timestamp,
+                   m.name AS activityname,
+                   c.count
+              FROM {tool_activitystatistics_counts} c
+              JOIN {modules} m ON m.id = c.activityid
+              $where
+          ORDER BY c.timestamp ASC, m.name ASC";
+
+        return $DB->get_records_sql($sql, $params);
+    }
 }
