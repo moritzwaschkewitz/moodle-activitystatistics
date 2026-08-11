@@ -17,13 +17,9 @@
 namespace tool_activitystatistics\output;
 
 use core\chart_series;
-use core\chart_pie;
+use core\chart_bar;
 
-/**
- * Class pie_chart_activities_count
- * @deprecated
- */
-class pie_chart_activities_count {
+class bar_chart_activities_count {
 
     private array $activity_counts;
 
@@ -31,23 +27,23 @@ class pie_chart_activities_count {
         $this->activity_counts = $activity_counts;
     }
 
-    public function get_chart(): chart_pie {
-        $pie = new chart_pie();
+    public function get_chart(): chart_bar {
+        $bar = new chart_bar();
 
-        $pie_labels = [];
-        $pie_data = [];
+        $bar_labels = [];
+        $bar_data = [];
 
         foreach ($this->activity_counts as $record) {
-            $pie_labels[] = format_string($record->activityname);
-            $pie_data[] = (int)$record->count;
+            $bar_labels[] = format_string($record->activityname);
+            $bar_data[] = (int)$record->count;
         }
 
-        $pie->set_labels($pie_labels);
+        $bar->set_labels($bar_labels);
         $series = new chart_series(
             get_string('index:activity_distribution:chart_title', 'tool_activitystatistics'),
-            $pie_data);
-        $pie->add_series($series);
+            $bar_data);
+        $bar->add_series($series);
 
-        return $pie;
+        return $bar;
     }
 }

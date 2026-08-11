@@ -22,6 +22,10 @@ use html_table;
 use html_writer;
 use moodle_url;
 
+/**
+ * Class table_top5_activities
+ * @deprecated
+ */
 class table_top5_activities {
 
     private array $top_activities;

@@ -26,9 +26,8 @@ use html_writer;
 class index_page implements renderable, templatable {
 
     private cards_general_overview $overview_cards;
-    private table_top5_activities $top_table;
-    private pie_chart_activities_count $pie_chart;
     private line_chart_total_count $line_chart;
+    private bar_chart_activities_count $bar_chart;
     private renderable_filter_form $filter_form;
     private multi_line_chart_activity_counts $multi_line_chart;
 
@@ -41,8 +40,7 @@ class index_page implements renderable, templatable {
      */
     public function __construct($overview_stats, $activity_counts, $history_data, $filteractionurl, ?array $selectedmodules = null, array $activityhistory = []) {
         $this->overview_cards = new cards_general_overview($overview_stats);
-        $this->top_table = new table_top5_activities(array_slice($activity_counts, 0, 5));
-        $this->pie_chart = new pie_chart_activities_count($activity_counts);
+        $this->bar_chart = new bar_chart_activities_count($activity_counts);
         $this->line_chart = new line_chart_total_count($history_data);
         $this->multi_line_chart = new multi_line_chart_activity_counts($activityhistory);
 
@@ -52,8 +50,7 @@ class index_page implements renderable, templatable {
     public function export_for_template(renderer_base $output) {
         return [
             'overview_cards' => $this->overview_cards->export_for_template($output),
-            'top_table' => html_writer::table($this->top_table->get_table()),
-            'pie_chart' => $output->render($this->pie_chart->get_chart()),
+            'bar_chart' => $output->render($this->bar_chart->get_chart()),
             'line_chart' => $output->render($this->line_chart->get_chart()),
             'filter_form' => $output->render($this->filter_form),
             'multi_line_chart' => $output->render($this->multi_line_chart->get_chart())
