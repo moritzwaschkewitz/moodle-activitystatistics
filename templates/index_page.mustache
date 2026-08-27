@@ -1,10 +1,22 @@
+{{!
+    Main entry template for the Activity Statistics dashboard.
+    Establishes the top-level layout and the primary visual hierarchy starting with an H2.
+}}
 <div class="tool_activitystatistics-container">
     <h2>{{#str}} index:overview:heading, tool_activitystatistics {{/str}}</h2>
 
-    {{#overview_cards}}
-        {{> tool_activitystatistics/overview_cards }}
-    {{/overview_cards}}
+    {{!
+        This renders the top-level KPI (Key Performance Indicator) tiles for the dashboard.
+        The necessary data variables (total_activities, total_count, last_update) are expected
+        to be directly available in the root context passed by the backend.
+    }}
+    {{> tool_activitystatistics/overview_cards }}
 
+    {{!
+        Static visualization block. Unlike the historical data, this single bar chart
+        does not require complex filter forms, so it is kept inline rather than
+        being abstracted into its own partial. The H3 maintains the descending typography scale.
+    }}
     <div class="row mt-4">
         <div class="col-12">
             <h3>{{#str}} index:activity_distribution:heading, tool_activitystatistics {{/str}}</h3>
@@ -12,31 +24,10 @@
         </div>
     </div>
 
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="card-title">{{#str}} index:history:heading, tool_activitystatistics {{/str}}</h5>
-        </div>
-        <div class="card-body">
-            <div class="mb-4 p-3 border rounded">
-                {{{ time_filter_form }}}
-            </div>
-
-            <div class="col-12 mt-4">
-                <h3>{{#str}} index:total_count:heading, tool_activitystatistics {{/str}}</h3>
-                {{{ line_chart }}}
-            </div>
-
-            <hr class="my-5">
-
-            <div class="col-12 mt-4">
-                <div id="tool-activitystatistics-filterform-container" class="tool-activitystatistics-filterform mb-4">
-                    {{{ module_filter_form }}}
-                </div>
-
-                <h3>{{#str}} index:multi_line_count:heading, tool_activitystatistics {{/str}}</h3>
-                {{{ multi_line_chart }}}
-            </div>
-        </div>
-    </div>
+    {{!
+        Delegates the rendering of the complex time-filtered charts to a dedicated partial.
+        This keeps the main index template concise and maintainable.
+    }}
+    {{> tool_activitystatistics/historical_data }}
 
 </div>

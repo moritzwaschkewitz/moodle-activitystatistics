@@ -1,0 +1,51 @@
+{{!
+    This partial renders the "Historical Data" section.
+    It is wrapped in a main card but uses inner bordered containers to visually separate the charts
+    while keeping the time filter acting globally on both.
+}}
+<div class="card mt-5">
+
+    {{! Custom padding (pt-4 pb-2) and border removal create a seamless visual transition
+        to the time filter form below, preventing the heading from looking cramped against the top edge. }}
+    <div class="card-header border-bottom-0 pt-4 pb-2 bg-white">
+        <h3 class="mb-0">{{#str}} index:history:heading, tool_activitystatistics {{/str}}</h3>
+    </div>
+
+    <div class="card-body pt-2">
+
+        {{! Global time filter: Modifies the timeframe for ALL charts in this section.
+            Note: This form relies on custom overrides in the plugin's styles.css to force
+            Moodle's QuickForm elements into a compact inline layout. }}
+        <div class="mb-4 tool-activitystatistics-timefilter">
+            {{{ time_filter_form }}}
+        </div>
+
+        <div class="mb-5 p-4 border rounded bg-white">
+            <h4 class="mb-4">{{#str}} index:total_count:heading, tool_activitystatistics {{/str}}</h4>
+            {{{ line_chart }}}
+        </div>
+
+        <div class="p-4 border rounded bg-white mb-2">
+            <h4 class="mb-4">
+                {{#str}} index:multi_line_count:heading, tool_activitystatistics {{/str}}
+
+                {{! The current_period_label (e.g., "Last 90 days") is injected here as a sticky reference.
+                    This ensures users still know which timeframe they are looking at even if they
+                    scroll down and the global time filter goes out of view. }}
+                {{#current_period_label}}
+                    <span class="text-muted fs-6 fw-normal ms-2">({{ current_period_label }})</span>
+                {{/current_period_label}}
+            </h4>
+
+            {{{ multi_line_chart }}}
+
+            {{! Secondary filter: Unlike the time filter, this form strictly targets the multi-line chart above it.
+                The QuickForm header (legend) has been removed in the PHP definition to maintain a clean
+                visual hierarchy (h3 -> h4 -> content) without injecting redundant sub-headings. }}
+            <div id="tool-activitystatistics-filterform-container" class="tool-activitystatistics-filterform mb-4">
+                {{{ module_filter_form }}}
+            </div>
+        </div>
+
+    </div>
+</div>

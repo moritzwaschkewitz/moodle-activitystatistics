@@ -1,0 +1,62 @@
+/* --- Tool Activity Statistics: Time Filter Form --- */
+
+/*
+  Converts each Moodle form item wrapper (.fitem) into a compact flex container.
+  Removes default vertical margins and adds a controlled right margin to space out form elements horizontally.
+*/
+.tool-activitystatistics-timefilter .fitem {
+    display: flex;
+    align-items: center !important;
+    margin-bottom: 0 !important;
+    margin-right: 1.5rem !important;
+    gap: 0.5rem;
+}
+
+/*
+  Overrides Moodle's internal Bootstrap grid widths (such as col-md-9)
+  applied to form element inner wrappers, allowing them to shrink-wrap their content.
+*/
+.tool-activitystatistics-timefilter .fitem > div {
+    width: auto !important;
+    padding: 0 !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+}
+
+/*
+  Forces Moodle's nested date selector fields (day, month, year dropdowns)
+  into a strict single-line flex row, preventing unwanted line breaks.
+*/
+.tool-activitystatistics-timefilter span.fdate_selector,
+.tool-activitystatistics-timefilter .fitem_fdate_selector fieldset {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 0.5rem;
+    margin: 0 !important;
+}
+
+/*
+  Hides invisible fieldset legends that Moodle generates for screen readers,
+  as they would otherwise disrupt the flexbox flow.
+*/
+.tool-activitystatistics-timefilter legend {
+    display: none !important;
+}
+
+/*
+  Clears the right margin on the final submit button item
+  so it aligns neatly at the end of the inline form group.
+*/
+.tool-activitystatistics-timefilter .fitem_fsubmit {
+    margin-right: 0 !important;
+}
+
+/*
+  Resets Moodle's default button sizing inside the inline context
+  and applies standard, compact Bootstrap button padding.
+*/
+.tool-activitystatistics-timefilter .fitem_fsubmit input[type="submit"] {
+    height: auto !important;
+    padding: 0.375rem 0.75rem !important;
+}

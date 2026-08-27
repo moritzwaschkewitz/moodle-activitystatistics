@@ -1,0 +1,21 @@
+/* Checkboxen (dein bestehendes Layout bleibt) */
+.tool-activitystatistics-filterform #fgroup_id_modules .felement {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1.25rem;
+    align-items: flex-start;
+}
+
+.tool-activitystatistics-filterform #fgroup_id_modules .felement .form-check {
+    min-width: 220px;
+    margin: 0;
+}
+
+/* Buttons: eigene Zeile unter den Aktivitäten, nebeneinander */
+.tool-activitystatistics-filterform #fgroup_id_selectbuttons .felement {
+    display: flex;
+    gap: .5rem;
+    margin-top: .75rem;   /* Abstand zu den Checkboxen */
+    align-items: center;
+    flex-wrap: wrap;      /* falls sehr schmaler Screen */
+}
