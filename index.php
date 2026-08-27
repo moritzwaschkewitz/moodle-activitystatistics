@@ -99,9 +99,9 @@ $page_output = new index_page(
     data_provider::get_current_activity_counts(),
     data_provider::get_total_count_history($fromtimestamp, $totimestamp),
     $actionurl,
+    $timefilterform,
     $selectedmodules,
-    data_provider::get_activity_counts_history_by_module($enabledmodnames, $fromtimestamp, $totimestamp),
-    $timefilterform
+    data_provider::get_activity_counts_history_by_module($enabledmodnames, $fromtimestamp, $totimestamp)
 );
 
 echo $OUTPUT->header();

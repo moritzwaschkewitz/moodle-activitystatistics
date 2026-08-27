@@ -10,7 +10,18 @@ require_once($CFG->libdir . '/formslib.php');
 class module_filter_form extends \moodleform {
 
     public function definition(): void {
+        global $PAGE;
         $mform = $this->_form;
+
+        // Container ID generieren und ans Formular hängen
+        $containerid = 'tool_activitystatistics_filter_' . uniqid();
+        $this->_form->_attributes['id'] = $containerid;
+
+        // AMD JS anbinden
+        $PAGE->requires->js_call_amd('tool_activitystatistics/module_selectall', 'init', [$containerid]);
+
+        $mform->addElement('hidden', 'filtersubmitted', 1);
+        $mform->setType('filtersubmitted', PARAM_INT);
 
         $mform->addElement('hidden', 'filtersubmitted', 1);
         $mform->setType('filtersubmitted', PARAM_INT);
