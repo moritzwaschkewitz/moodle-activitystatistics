@@ -16,6 +16,7 @@
 
 use tool_activitystatistics\data_provider;
 use tool_activitystatistics\output\index_page;
+use tool_activitystatistics\form\time_filter_form;
 
 require_once(__DIR__ . '/../../../config.php');
 
@@ -40,33 +41,67 @@ if ($overview_stats->last_update === false) {
     exit;
 }
 
-// Neu: ausgewählte Module aus dem Formular lesen.
-// Das Formular liefert Checkboxen als modules[forum]=1, modules[quiz]=0, ...
-// Wenn noch nicht gefiltert wurde, ist $selectedmodules = null (=> Default "alle an" in der Form).
-$selectedmodules = optional_param_array('modules', null, PARAM_BOOL);
-
+// --- Filter processing ---
+// Module filter state.
 $filtersubmitted = optional_param('filtersubmitted', 0, PARAM_INT);
-
 if ($filtersubmitted) {
-    // Formular wurde abgeschickt (auch wenn keine Checkboxen gesetzt sind).
-    $selectedmodules = optional_param_array('modules', [], PARAM_BOOL); // kann leer sein
+    $selectedmodules = optional_param_array('modules', [], PARAM_BOOL);
 } else {
-    // Erster Seitenaufruf: null => Form setzt Default "alle an".
+    // Not submitted via module form. Could be first load or time filter submission.
+    // If time filter was submitted, it will have passed 'modules' params.
     $selectedmodules = null;
+    $modulesparam = optional_param_array('modules', null, PARAM_BOOL);
+    if ($modulesparam !== null) {
+        $selectedmodules = $modulesparam;
+    }
+}
+
+// Time filter state.
+$timefilterform = new time_filter_form($actionurl, ['modules' => $selectedmodules]);
+
+// 1. Set default state first: all time.
+$fromtimestamp = null;
+$totimestamp = null;
+
+// 2. Check for form submission and override defaults if valid data is received.
+if ($timefilterdata = $timefilterform->get_data()) {
+    $now = time();
+    switch ($timefilterdata->period) {
+        case '30':
+            $fromtimestamp = strtotime('-30 days', $now);
+            $totimestamp = $now;
+            break;
+        case '90':
+            $fromtimestamp = strtotime('-90 days', $now);
+            $totimestamp = $now;
+            break;
+        case '180':
+            $fromtimestamp = strtotime('-180 days', $now);
+            $totimestamp = $now;
+            break;
+        case 'custom':
+            $fromtimestamp = $timefilterdata->fromdate;
+            $totimestamp = $timefilterdata->todate;
+            break;
+        case 'all':
+            // Defaults are already set, do nothing.
+            break;
+    }
 }
 
 $enabledmodnames = null;
 if (is_array($selectedmodules)) {
-    $enabledmodnames = array_keys(array_filter($selectedmodules)); // nur checked
+    $enabledmodnames = array_keys(array_filter($selectedmodules));
 }
 
 $page_output = new index_page(
     $overview_stats,
     data_provider::get_current_activity_counts(),
-    data_provider::get_total_count_history(),
+    data_provider::get_total_count_history($fromtimestamp, $totimestamp),
     $actionurl,
     $selectedmodules,
-    data_provider::get_activity_counts_history_by_module($enabledmodnames)
+    data_provider::get_activity_counts_history_by_module($enabledmodnames, $fromtimestamp, $totimestamp),
+    $timefilterform
 );
 
 echo $OUTPUT->header();

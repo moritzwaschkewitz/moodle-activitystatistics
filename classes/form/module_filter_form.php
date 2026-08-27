@@ -17,7 +17,7 @@ class module_filter_form extends \moodleform {
 
         $selected = $this->_customdata['selected'] ?? null; // null => Default alle an
 
-        $mform->addElement('header', 'filterhdr', get_string('filter', 'tool_activitystatistics'));
+        $mform->addElement('header', 'filterhdr', get_string('index:module_filter', 'tool_activitystatistics'));
 
         // Alle installierten Aktivitätsmodule holen.
         // keys: forum, quiz, assign, ...
@@ -51,13 +51,10 @@ class module_filter_form extends \moodleform {
             }
         }
 
-// Gruppe hinzufügen (erst jetzt sind Elemente "im Formular").
         $mform->addGroup($elements, 'modules', '', '', false);
 
-// Default für die komplette Gruppe setzen.
         $mform->setDefaults($defaults);
 
-// Neue Zeile darunter: "Alle auswählen" / "Keine auswählen" nebeneinander.
         $buttonselements = [];
         $buttonselements[] = $mform->createElement('button', 'selectall',
             get_string('selectallmodules', 'tool_activitystatistics'),
@@ -67,10 +64,14 @@ class module_filter_form extends \moodleform {
             get_string('selectnonemodules', 'tool_activitystatistics'),
             ['type' => 'button', 'data-action' => 'selectnone']
         );
+        $buttonselements[] = $mform->createElement('submit', 'submitbutton',
+            get_string('applyfilter', 'tool_activitystatistics'),
+            ['class' => 'btn-primary']
+        );
 
-// Eigene Group -> eigene Zeile im Formlayout.
+        // Eigene Group -> eigene Zeile im Formlayout.
         $mform->addGroup($buttonselements, 'selectbuttons', '', ' ', false);
 
-        $this->add_action_buttons(false, get_string('applyfilter', 'tool_activitystatistics'));
+        //$this->add_action_buttons(false, get_string('applyfilter', 'tool_activitystatistics'));
     }
 }

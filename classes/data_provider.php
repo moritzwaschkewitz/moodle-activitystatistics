@@ -94,17 +94,41 @@ class data_provider {
      * @return stdClass[] Array of objects containing historical totals, indexed by their timestamp.
      * @throws \dml_exception If there is an error interacting with the database.
      */
-    public static function get_total_count_history() {
+    public static function get_total_count_history(?int $from = null, ?int $to = null): array {
         global $DB;
+
+        list($timewhere, $params) = self::get_time_where_clause($from, $to);
+        $where = '';
+        if ($timewhere) {
+            $where = 'WHERE ' . $timewhere;
+        }
 
         // Die DB summiert alle Counts (über alle Aktivitäten hinweg) pro Zeitstempel
         $sql = "SELECT timestamp, SUM(count) as total_sum
                   FROM {tool_activitystatistics_counts}
+                  $where
               GROUP BY timestamp
               ORDER BY timestamp ASC";
 
         // get_records_sql gibt ein Array zurück, bei dem die erste Spalte (timestamp) der Array-Key ist.
-        return $DB->get_records_sql($sql);
+        $records = $DB->get_records_sql($sql, $params);
+
+        if (empty($records) && $from) {
+            $latesttimestamp = $DB->get_field_sql(
+                'SELECT MAX(timestamp) FROM {tool_activitystatistics_counts} WHERE timestamp < :from',
+                ['from' => $from]
+            );
+
+            if ($latesttimestamp) {
+                $sql = "SELECT timestamp, SUM(count) as total_sum
+                          FROM {tool_activitystatistics_counts}
+                         WHERE timestamp = :timestamp
+                      GROUP BY timestamp";
+                $records = $DB->get_records_sql($sql, ['timestamp' => $latesttimestamp]);
+            }
+        }
+
+        return $records;
     }
 
     /**
@@ -118,27 +142,121 @@ class data_provider {
      * @param string[]|null $modnames Optional list of module names to include. Null = all.
      * @return \stdClass[] list of records
      */
-    public static function get_activity_counts_history_by_module(?array $modnames = null): array {
+    public static function get_activity_counts_history_by_module(
+        ?array $modnames = null,
+        ?int $from = null,
+        ?int $to = null
+    ): array {
         global $DB;
 
         $params = [];
-        $where = '';
+        $wheres = [];
 
         if (!empty($modnames)) {
             list($insql, $inparams) = $DB->get_in_or_equal($modnames, SQL_PARAMS_NAMED, 'mn');
-            $where = "WHERE m.name $insql";
-            $params = $inparams;
+            $wheres[] = "m.name $insql";
+            $params = array_merge($params, $inparams);
+        }
+
+        list($timewhere, $timeparams) = self::get_time_where_clause($from, $to, 'c');
+        if ($timewhere) {
+            $wheres[] = $timewhere;
+            $params = array_merge($params, $timeparams);
+        }
+
+        $where = '';
+        if (!empty($wheres)) {
+            $where = 'WHERE ' . implode(' AND ', $wheres);
         }
 
         $sql = "SELECT c.id,                -- WICHTIG: eindeutiger Key für get_records_sql
-                   c.timestamp,
-                   m.name AS activityname,
-                   c.count
-              FROM {tool_activitystatistics_counts} c
-              JOIN {modules} m ON m.id = c.activityid
-              $where
-          ORDER BY c.timestamp ASC, m.name ASC";
+                       c.timestamp,
+                       m.name AS activityname,
+                       c.count
+                  FROM {tool_activitystatistics_counts} c
+                  JOIN {modules} m ON m.id = c.activityid
+                  $where
+              ORDER BY c.timestamp ASC, m.name ASC";
 
-        return $DB->get_records_sql($sql, $params);
+        $records = $DB->get_records_sql($sql, $params);
+
+        if (empty($records) && $from) {
+            $latesttswheres = ['c.timestamp < :from'];
+            $latesttsparams = ['from' => $from];
+            $join = '';
+
+            if (!empty($modnames)) {
+                $join = 'JOIN {modules} m ON m.id = c.activityid';
+                list($insql, $inparams) = $DB->get_in_or_equal($modnames, SQL_PARAMS_NAMED, 'mn');
+                $latesttswheres[] = "m.name $insql";
+                $latesttsparams += $inparams;
+            }
+
+            $latesttswhere = 'WHERE ' . implode(' AND ', $latesttswheres);
+
+            $latesttimestamp = $DB->get_field_sql(
+                "SELECT MAX(c.timestamp)
+                   FROM {tool_activitystatistics_counts} c
+                   $join
+                 $latesttswhere",
+                $latesttsparams
+            );
+
+            if ($latesttimestamp) {
+                $params = [];
+                $wheres = ['c.timestamp = :timestamp'];
+                $params['timestamp'] = $latesttimestamp;
+
+                if (!empty($modnames)) {
+                    list($insql, $inparams) = $DB->get_in_or_equal($modnames, SQL_PARAMS_NAMED, 'mn');
+                    $wheres[] = "m.name $insql";
+                    $params += $inparams;
+                }
+
+                $where = 'WHERE ' . implode(' AND ', $wheres);
+
+                $sql = "SELECT c.id,
+                               c.timestamp,
+                               m.name AS activityname,
+                               c.count
+                          FROM {tool_activitystatistics_counts} c
+                          JOIN {modules} m ON m.id = c.activityid
+                          $where
+                      ORDER BY c.timestamp ASC, m.name ASC";
+                $records = $DB->get_records_sql($sql, $params);
+            }
+        }
+
+        return $records;
+    }
+
+    /**
+     * @param int|null $from
+     * @param int|null $to
+     * @param string $tablealias
+     * @return array
+     */
+    private static function get_time_where_clause(?int $from, ?int $to, string $tablealias = ''): array {
+        $wheres = [];
+        $params = [];
+
+        if ($tablealias) {
+            $tablealias = $tablealias . '.';
+        }
+
+        if ($from) {
+            $wheres[] = $tablealias . 'timestamp >= :from';
+            $params['from'] = $from;
+        }
+        if ($to) {
+            $wheres[] = $tablealias . 'timestamp <= :to';
+            $params['to'] = $to;
+        }
+
+        if (empty($wheres)) {
+            return ['', []];
+        }
+
+        return [implode(' AND ', $wheres), $params];
     }
 }

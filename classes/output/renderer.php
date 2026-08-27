@@ -43,6 +43,7 @@ class renderer extends plugin_renderer_base {
      */
     public function render_renderable_filter_form(\tool_activitystatistics\output\renderable_filter_form $f): string {
         $data = $f->export_for_template($this);
-        return $this->render_from_template('tool_activitystatistics/filter_form', $data);
+        //return $this->render_from_template('tool_activitystatistics/module_filter_form', $data);
+        return $data->formhtml ?? $data['module_filter_form'];
     }
 }

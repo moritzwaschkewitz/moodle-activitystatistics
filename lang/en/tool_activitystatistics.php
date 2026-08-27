@@ -47,10 +47,18 @@ $string['index:total_count:heading'] = 'Total Count Over Time';
 $string['index:total_count:chart_title'] = 'Total Activity Count';
 
 
-$string['filter'] = 'Filter';
-$string['selectallmodules'] = 'Alle auswählen';
-$string['selectnonemodules'] = 'Keine auswählen';
-$string['applyfilter'] = 'Filter anwenden';
+$string['index:module_filter'] = 'Module Filter';
+$string['selectallmodules'] = 'Select all';
+$string['selectnonemodules'] = 'Select none';
+$string['applyfilter'] = 'Apply filter';
 
-$string['index:multi_line_count:heading'] = 'ABC';
+$string['index:multi_line_count:heading'] = 'Activity Count by Module';
 
+$string['period'] = 'Period';
+$string['alltime'] = 'All time';
+$string['lastxdays'] = 'Last {$a} days';
+$string['customrange'] = 'Custom range';
+$string['fromdate'] = 'From';
+$string['todate'] = 'To';
+$string['fromdatebeforetodate'] = 'The \'from\' date must be before the \'to\' date.';
+$string['index:history:heading'] = 'Historical data';

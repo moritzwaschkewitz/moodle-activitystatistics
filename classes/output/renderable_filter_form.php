@@ -41,7 +41,7 @@ class renderable_filter_form implements renderable, templatable {
     public function export_for_template(renderer_base $output): array {
         return [
             'containerid' => $this->containerid,
-            'formhtml' => $this->form->render(),
+            'module_filter_form' => $this->form->render(),
         ];
     }
 }

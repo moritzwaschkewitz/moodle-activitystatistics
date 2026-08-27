@@ -12,22 +12,27 @@
         </div>
     </div>
 
-    <div class="row mt-5">
-        <div class="col-12">
-            <h3>{{#str}} index:total_count:heading, tool_activitystatistics {{/str}}</h3>
-            {{{ line_chart }}}
-        </div>
-    </div>
-
     <div class="card mt-4">
         <div class="card-header">
-            <h5 class="card-title">{{str_multi_title}}</h5>
+            <h5 class="card-title">{{#str}} index:history:heading, tool_activitystatistics {{/str}}</h5>
         </div>
         <div class="card-body">
-            <div class="filter-form-container">
-                {{{filter_form}}}
+            <div class="mb-4 p-3 border rounded">
+                {{{ time_filter_form }}}
             </div>
-            <div class="col-12">
+
+            <div class="col-12 mt-4">
+                <h3>{{#str}} index:total_count:heading, tool_activitystatistics {{/str}}</h3>
+                {{{ line_chart }}}
+            </div>
+
+            <hr class="my-5">
+
+            <div class="col-12 mt-4">
+                <div id="tool-activitystatistics-filterform-container" class="tool-activitystatistics-filterform mb-4">
+                    {{{ module_filter_form }}}
+                </div>
+
                 <h3>{{#str}} index:multi_line_count:heading, tool_activitystatistics {{/str}}</h3>
                 {{{ multi_line_chart }}}
             </div>

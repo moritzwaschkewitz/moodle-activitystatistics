@@ -11,6 +11,13 @@ erDiagram
 
     tool_activitystatistics_counts }o--|| modules : "refers to activity"
 ```
+# TODO: Top/Flop Plugins der letzten Zeit (Delta)
 
+# TODO: Balkendiagramm
 
+# TODO: Doppelte Farben
+
+# TODO: Zeitraum
+
+# TODO: Tatsächliche Nutzung/ Zugriffe
 

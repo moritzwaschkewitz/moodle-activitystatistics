@@ -28,8 +28,9 @@ class index_page implements renderable, templatable {
     private cards_general_overview $overview_cards;
     private line_chart_total_count $line_chart;
     private bar_chart_activities_count $bar_chart;
-    private renderable_filter_form $filter_form;
+    private renderable_filter_form $module_filter_form;
     private multi_line_chart_activity_counts $multi_line_chart;
+    private \moodleform $time_filter_form;
 
     /**
      * @param array $overview_stats
@@ -38,13 +39,22 @@ class index_page implements renderable, templatable {
      * @param string|\moodle_url $filteractionurl  URL, wohin das Filterformular submitten soll
      * @param array|null $selectedmodules          z.B. ['forum' => 1, 'quiz' => 0, ...] oder null (=> Default)
      */
-    public function __construct($overview_stats, $activity_counts, $history_data, $filteractionurl, ?array $selectedmodules = null, array $activityhistory = []) {
+    public function __construct(
+        $overview_stats,
+        $activity_counts,
+        $history_data,
+        $filteractionurl,
+        ?array $selectedmodules = null,
+        array $activityhistory = [],
+        \moodleform $time_filter_form
+    ) {
         $this->overview_cards = new cards_general_overview($overview_stats);
         $this->bar_chart = new bar_chart_activities_count($activity_counts);
         $this->line_chart = new line_chart_total_count($history_data);
         $this->multi_line_chart = new multi_line_chart_activity_counts($activityhistory);
 
-        $this->filter_form = new renderable_filter_form($filteractionurl, $selectedmodules);
+        $this->module_filter_form = new renderable_filter_form($filteractionurl, $selectedmodules);
+        $this->time_filter_form = $time_filter_form;
     }
 
     public function export_for_template(renderer_base $output) {
@@ -52,8 +62,9 @@ class index_page implements renderable, templatable {
             'overview_cards' => $this->overview_cards->export_for_template($output),
             'bar_chart' => $output->render($this->bar_chart->get_chart()),
             'line_chart' => $output->render($this->line_chart->get_chart()),
-            'filter_form' => $output->render($this->filter_form),
-            'multi_line_chart' => $output->render($this->multi_line_chart->get_chart())
+            'module_filter_form' => $output->render($this->module_filter_form),
+            'multi_line_chart' => $output->render($this->multi_line_chart->get_chart()),
+            'time_filter_form' => $this->time_filter_form->render(),
         ];
     }
 }
