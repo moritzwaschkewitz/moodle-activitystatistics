@@ -21,11 +21,23 @@ use core\task\scheduled_task;
 class log_activities_count extends scheduled_task {
 
     public function get_name() {
-        return get_string('log_activities_count', 'tool_activitystatistics');
+        return get_string('task:log_activities_count', 'tool_activitystatistics');
     }
 
     public function execute() {
         global $DB;
+
+        $today_midnight = usergetmidnight(time());
+        $already_run_today = $DB->record_exists_select(
+            'tool_activitystatistics_counts',
+            'timestamp >= ?',
+            [$today_midnight]
+        );
+
+        if ($already_run_today) {
+            mtrace('Snapshots for today already exist. Skipping.');
+            return;
+        }
 
         $modules = $DB->get_records('modules');
 

@@ -14,15 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// TODO: setting for custom interval
 $tasks = [
     [
         'classname' => '\tool_activitystatistics\task\log_activities_count',
         'blocking' => 0,
         'minute' => '30',
-        'hour' => '17',
-        'day' => '*',
-        'month' => '1,7',
-        'dayofweek' => '0',
+        'hour' => '23',     // 11:30 PM
+        'day' => '*',       // Every days
+        'month' => '*',     // Every month
+        'dayofweek' => '*', // Every day of the week
     ],
 ];
