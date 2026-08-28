@@ -24,21 +24,41 @@ use renderer_base;
 use html_writer;
 use tool_activitystatistics\form\module_filter_form;
 
+/**
+ * Main renderable class for the Activity Statistics dashboard.
+ * Implements Moodle's renderable and templatable interfaces to bridge raw data
+ * and chart objects with Mustache templates.
+ */
 class index_page implements renderable, templatable {
 
+    /** @var cards_general_overview KPI overview cards component. */
     private cards_general_overview $overview_cards;
+
+    /** @var line_chart_total_count Total count trend line chart component. */
     private line_chart_total_count $line_chart;
+
+    /** @var bar_chart_activities_count Activity distribution bar chart component. */
     private bar_chart_activities_count $bar_chart;
+
+    /** @var module_filter_form Form instance for filtering specific modules. */
     private module_filter_form $module_filter_form;
+
+    /** @var multi_line_chart_activity_counts Multi-line chart component for module breakdowns. */
     private multi_line_chart_activity_counts $multi_line_chart;
+
+    /** @var \moodleform Global time filter form instance. */
     private \moodleform $time_filter_form;
 
     /**
-     * @param array $overview_stats
-     * @param array $activity_counts
-     * @param array $history_data
-     * @param string|\moodle_url $filteractionurl  URL, wohin das Filterformular submitten soll
-     * @param array|null $selectedmodules          z.B. ['forum' => 1, 'quiz' => 0, ...] oder null (=> Default)
+     * Constructor: Initializes all sub-components, charts, and forms required for the dashboard.
+     *
+     * @param mixed $overview_stats High-level statistics data.
+     * @param array $activity_counts Current snapshot of activity instances.
+     * @param array $history_data Processed historical total counts.
+     * @param string|\moodle_url $filteractionurl Target URL for the module filter form submissions.
+     * @param \moodleform $time_filter_form Initialized time filter form object.
+     * @param array|null $selectedmodules Associative array of active modules or null for defaults.
+     * @param array $activityhistory Processed historical module counts.
      */
     public function __construct(
         $overview_stats,
@@ -54,10 +74,18 @@ class index_page implements renderable, templatable {
         $this->line_chart = new line_chart_total_count($history_data);
         $this->multi_line_chart = new multi_line_chart_activity_counts($activityhistory);
 
+        // Instantiate the module filter form, passing down the target action URL and previously selected states.
         $this->module_filter_form = new module_filter_form($filteractionurl, $selectedmodules);
         $this->time_filter_form = $time_filter_form;
     }
 
+    /**
+     * Exports all component data and pre-rendered chart HTML into a structured array
+     * ready to be consumed by the Mustache template engine.
+     *
+     * @param renderer_base $output Moodle renderer instance.
+     * @return array Associative array of template variables.
+     */
     public function export_for_template(renderer_base $output) {
         return [
             'overview_cards' => $this->overview_cards->export_for_template($output),
