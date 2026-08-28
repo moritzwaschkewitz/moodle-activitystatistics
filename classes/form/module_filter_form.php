@@ -88,15 +88,15 @@ class module_filter_form extends \moodleform {
         // Regular HTML buttons are used for 'selectall'/'selectnone' to prevent accidental form submission via JS.
         $buttonselements = [];
         $buttonselements[] = $mform->createElement('button', 'selectall',
-            get_string('selectallmodules', 'tool_activitystatistics'),
+            get_string('filter:select_all', 'tool_activitystatistics'),
             ['type' => 'button', 'data-action' => 'selectall', 'class' => 'btn btn-sm btn-outline-secondary']
         );
         $buttonselements[] = $mform->createElement('button', 'selectnone',
-            get_string('selectnonemodules', 'tool_activitystatistics'),
+            get_string('filter:select_none', 'tool_activitystatistics'),
             ['type' => 'button', 'data-action' => 'selectnone', 'class' => 'btn btn-sm btn-outline-secondary']
         );
         $buttonselements[] = $mform->createElement('submit', 'submitbutton',
-            get_string('applyfilter', 'tool_activitystatistics'),
+            get_string('filter:apply', 'tool_activitystatistics'),
             ['class' => 'btn btn-sm btn-primary']
         );
 

@@ -34,16 +34,16 @@ class time_filter_form extends \moodleform {
         $this->_form->updateAttributes(['class' => 'mform d-flex flex-wrap gap-3 align-items-center mform-inline ignoredirty']);
 
         $periods = [
-            'all' => get_string('alltime', 'tool_activitystatistics'),
-            '30' => get_string('lastxdays', 'tool_activitystatistics', 30),
-            '90' => get_string('lastxdays', 'tool_activitystatistics', 90),
-            '180' => get_string('lastxdays', 'tool_activitystatistics', 180),
-            'custom' => get_string('customrange', 'tool_activitystatistics'),
+            'all' => get_string('filter:all_time', 'tool_activitystatistics'),
+            '30' => get_string('filter:last_x_days', 'tool_activitystatistics', 30),
+            '90' => get_string('filter:last_x_days', 'tool_activitystatistics', 90),
+            '180' => get_string('filter:last_x_days', 'tool_activitystatistics', 180),
+            'custom' => get_string('filter:custom_range', 'tool_activitystatistics'),
         ];
 
         // Period dropdown: Triggers an immediate form submission via inline JavaScript
         // for all predefined options, bypassing the need to click a submit button.
-        $mform->addElement('select', 'period', get_string('period', 'tool_activitystatistics'), $periods, ['onchange' => 'if(this.value !== "custom") { this.form.submit(); }']);
+        $mform->addElement('select', 'period', get_string('filter:period', 'tool_activitystatistics'), $periods, ['onchange' => 'if(this.value !== "custom") { this.form.submit(); }']);
 
         // Dynamically retain the currently selected period from the request parameters
         // to prevent the dropdown from resetting to 'all' after a page reload.
@@ -51,8 +51,8 @@ class time_filter_form extends \moodleform {
         $mform->setDefault('period', $currentperiod);
 
         // Date selectors for custom ranges (rendered without optional checkboxes).
-        $mform->addElement('date_selector', 'fromdate', get_string('fromdate', 'tool_activitystatistics'));
-        $mform->addElement('date_selector', 'todate', get_string('todate', 'tool_activitystatistics'));
+        $mform->addElement('date_selector', 'fromdate', get_string('filter:from_date', 'tool_activitystatistics'));
+        $mform->addElement('date_selector', 'todate', get_string('filter:to_date', 'tool_activitystatistics'));
 
         // Conditional visibility: Automatically hide custom date fields unless 'custom' range is selected.
         $mform->hideIf('fromdate', 'period', 'neq', 'custom');
@@ -96,7 +96,7 @@ class time_filter_form extends \moodleform {
             }
             // Ensure the start date does not lie after the end date.
             if (!empty($data['fromdate']) && !empty($data['todate']) && $data['fromdate'] > $data['todate']) {
-                $errors['fromdate'] = get_string('fromdatebeforetodate', 'tool_activitystatistics');
+                $errors['fromdate'] = get_string('filter:error:from_after_to', 'tool_activitystatistics');
             }
         }
 

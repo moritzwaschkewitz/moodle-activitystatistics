@@ -14,51 +14,53 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+// --- General Plugin Strings ---
 $string['pluginname'] = 'Activity Statistics';
 $string['privacy:metadata'] = 'This plugin does not store any personal data. All data is logged and stored anonymously.';
 
-/* Scheduled Task */
-$string['log_activities_count'] = 'Log Activity Counts';
+// --- Scheduled Tasks ---
+$string['task:log_activities_count'] = 'Log activity counts';
 
-/* index.php */
+// --- Dashboard Index Page ---
 $string['index:title'] = 'Activity Statistics';
 $string['index:heading'] = 'Activity Statistics';
 $string['index:no_data_error'] = 'No activity statistics found. Has the scheduled task run at least once?';
-$string['index:unknown_activity_error'] = 'Unknown Activity';
+$string['index:unknown_activity_error'] = 'Unknown activity';
 
-/* index.php - Dashboard Overview */
+// Dashboard Overview Section
 $string['index:overview:heading'] = 'Dashboard Overview';
 $string['index:overview:total_activities'] = 'Total Activities';
 $string['index:overview:total_count'] = 'Total Count';
 $string['index:overview:last_update'] = 'Last Update';
 
-/* index.php - Top 5 Activities */
+// Top 5 Activities Section
 $string['index:top5:heading'] = 'Top 5 Activities';
 $string['index:top5:rank'] = 'Rank';
 $string['index:top5:activity'] = 'Activity';
 $string['index:top5:count'] = 'Count';
 
-/* index.php - Activity Distribution */
+// Activity Distribution Chart Section
 $string['index:activity_distribution:heading'] = 'Activity Distribution';
 $string['index:activity_distribution:chart_title'] = 'Activity Count';
 
-/* index.php - Total Count Line Chart */
+// Historical Data Section & Charts
+$string['index:history:heading'] = 'Historical Data';
 $string['index:total_count:heading'] = 'Total Count Over Time';
 $string['index:total_count:chart_title'] = 'Total Activity Count';
-
-
-$string['index:module_filter'] = 'Module Filter';
-$string['selectallmodules'] = 'Select all';
-$string['selectnonemodules'] = 'Select none';
-$string['applyfilter'] = 'Apply filter';
-
 $string['index:multi_line_count:heading'] = 'Activity Count by Module';
 
-$string['period'] = 'Period';
-$string['alltime'] = 'All time';
-$string['lastxdays'] = 'Last {$a} days';
-$string['customrange'] = 'Custom range';
-$string['fromdate'] = 'From';
-$string['todate'] = 'To';
-$string['fromdatebeforetodate'] = 'The \'from\' date must be before the \'to\' date.';
-$string['index:history:heading'] = 'Historical data';
+// --- Module Filter Elements ---
+$string['filter:select_all'] = 'Select all';
+$string['filter:select_none'] = 'Select none';
+$string['filter:apply'] = 'Apply filter';
+
+// --- Time Filter Controls ---
+$string['filter:period'] = 'Period';
+$string['filter:all_time'] = 'All time';
+$string['filter:last_x_days'] = 'Last {$a} days';
+$string['filter:custom_range'] = 'Custom range';
+$string['filter:from_date'] = 'From';
+$string['filter:to_date'] = 'To';
+$string['filter:error:from_after_to'] = 'The "From" date must be earlier than the "To" date.';
