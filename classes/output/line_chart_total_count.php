@@ -34,7 +34,7 @@ class line_chart_total_count {
         $line_data = [];
 
         foreach ($this->history_data as $timestamp => $record) {
-            $line_labels[] = userdate($timestamp, '%d.%m. %H:%M');
+            $line_labels[] = userdate($timestamp, '%d.%m.%y');
             $line_data[] = $record->total_sum;
         }
 

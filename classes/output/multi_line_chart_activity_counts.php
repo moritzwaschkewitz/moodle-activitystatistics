@@ -38,7 +38,7 @@ class multi_line_chart_activity_counts {
 
         // 2) Labels.
         $labels = array_map(function(int $ts): string {
-            return userdate($ts, '%d.%m. %H:%M');
+            return userdate($ts, '%d.%m.%y');
         }, $timestamps);
 
         $line->set_labels($labels);

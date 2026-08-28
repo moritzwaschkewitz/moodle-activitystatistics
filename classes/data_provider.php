@@ -23,17 +23,16 @@ class data_provider {
      * Fetches high-level activity statistics from the database.
      *
      * The returned object contains the following properties:
-     * - int `$total_activities`: Total number of activity types.
-     * - int `$total_count`: Total number of activity instances.
-     * - int|false`$last_update`: Unix timestamp of the last update to the plugin's statistics table.
+     * - int `$total_activities`: Total number of available activity types.
+     * - int `$total_count`: Total number of course module instances across the site.
+     * - int|false `$last_update`: Unix timestamp of the last update recorded in the statistics table.
      *
-     * Note: If the plugin's statistics table ({tool_activitystatistics_counts})
-     * does not have any data yet (e.g., upon initial installation before any
-     * data collection has occurred), the last_update value will evaluate to false.
+     * Note: If the statistics table ({tool_activitystatistics_counts}) contains no records yet,
+     * `$last_update` evaluates to false.
      *
-     * @global $DB
-     * @return stdClass Object containing the overview statistics.
-     * @throws \dml_exception If there is an error interacting with the database.
+     * @global \moodle_database $DB
+     * @return stdClass Object containing overview metrics.
+     * @throws \dml_exception If a database communication error occurs.
      */
     public static function get_overview_stats(): stdClass {
         global $DB;
@@ -50,21 +49,14 @@ class data_provider {
     /**
      * Fetches the most recent activity statistics snapshot for all tracked modules.
      *
-     * This method retrieves the latest recorded count for each activity type by
-     * filtering for the maximum timestamp per activity, ordered by volume descending.
+     * Retrieves the latest recorded count for each activity type by filtering
+     * for the maximum timestamp per activity, ordered descending by volume.
      *
-     * Each object in the returned array contains:
-     * - int `$id`: The ID of the activity module.
-     * - string `$activityname`: The internal name of the module (e.g., 'forum', 'assign').
-     * - int `$count`: The recorded instance count at that snapshot.
-     * - int `$timestamp`: Unix timestamp of the snapshot.
-     *
-     * @global $DB
-     * @return stdClass[] Array of objects representing the latest snapshot per activity, indexed by activity ID.
-     * @throws \dml_exception If there is an error interacting with the database.
+     * @global \moodle_database $DB
+     * @return stdClass[] Array of latest snapshot objects, indexed by activity ID.
+     * @throws \dml_exception If a database communication error occurs.
      */
-    public static function get_current_activity_counts(): array
-    {
+    public static function get_current_activity_counts(): array {
         global $DB;
 
         $sql = "SELECT c.activityid as id, m.name as activityname, c.count, c.timestamp
@@ -81,66 +73,69 @@ class data_provider {
     }
 
     /**
-     * Retrieves the historical progression of total activity counts over time.
+     * Retrieves the historical progression of total activity counts over time,
+     * optionally constrained by a time range.
      *
-     * Aggregates the sum of all activity instances across the system for each unique
-     * timestamp entry, sorted chronologically.
-     *
-     * Each object in the returned array contains:
-     * - int `$timestamp`: Unix timestamp of the historical record (also serves as the array key).
-     * - int `$total_sum`: The total combined count of all activities at that specific time.
-     *
-     * @global $DB
-     * @return stdClass[] Array of objects containing historical totals, indexed by their timestamp.
-     * @throws \dml_exception If there is an error interacting with the database.
+     * @param int|null $from Optional lower timestamp bound.
+     * @param int|null $to Optional upper timestamp bound.
+     * @global \moodle_database $DB
+     * @return stdClass[] Array of historical records indexed by timestamp.
+     * @throws \dml_exception If a database communication error occurs.
      */
     public static function get_total_count_history(?int $from = null, ?int $to = null): array {
         global $DB;
+        $criteria = new sql_criteria();
 
-        list($timewhere, $params) = self::get_time_where_clause($from, $to);
-        $where = '';
-        if ($timewhere) {
-            $where = 'WHERE ' . $timewhere;
-        }
+        if ($from) { $criteria->add("timestamp >= :from", ['from' => $from]); }
+        if ($to) { $criteria->add("timestamp <= :to", ['to' => $to]); }
 
-        // Die DB summiert alle Counts (über alle Aktivitäten hinweg) pro Zeitstempel
-        $sql = "SELECT timestamp, SUM(count) as total_sum
-                  FROM {tool_activitystatistics_counts}
-                  $where
-              GROUP BY timestamp
+        $sql = "SELECT timestamp, SUM(count) as total_sum 
+                  FROM {tool_activitystatistics_counts} 
+                  " . $criteria->get_where() . "
+              GROUP BY timestamp 
               ORDER BY timestamp ASC";
 
-        // get_records_sql gibt ein Array zurück, bei dem die erste Spalte (timestamp) der Array-Key ist.
-        $records = $DB->get_records_sql($sql, $params);
-
-        if (empty($records) && $from) {
-            $latesttimestamp = $DB->get_field_sql(
-                'SELECT MAX(timestamp) FROM {tool_activitystatistics_counts} WHERE timestamp < :from',
-                ['from' => $from]
-            );
-
-            if ($latesttimestamp) {
-                $sql = "SELECT timestamp, SUM(count) as total_sum
-                          FROM {tool_activitystatistics_counts}
-                         WHERE timestamp = :timestamp
-                      GROUP BY timestamp";
-                $records = $DB->get_records_sql($sql, ['timestamp' => $latesttimestamp]);
-            }
-        }
-
-        return $records;
+        return $DB->get_records_sql($sql, $criteria->get_params());
     }
 
     /**
-     * Retrieves the historical progression of activity counts per module over time.
+     * Finds the latest total count record strictly before a given timestamp.
+     * Used as a fallback data point when a custom time filter starts at a point
+     * where no direct snapshot exists, ensuring charts start accurately.
      *
-     * Returns rows with:
-     * - int $timestamp
-     * - string $activityname (e.g. 'forum', 'assign')
-     * - int $count
+     * @param int $from Upper timestamp limit (exclusive).
+     * @return stdClass|null The matching record object, or null if none found.
+     * @throws \dml_exception If a database communication error occurs.
+     */
+    public static function get_fallback_total_count(int $from): ?stdClass {
+        global $DB;
+
+        $latest = $DB->get_field_sql(
+            'SELECT MAX(timestamp) FROM {tool_activitystatistics_counts} WHERE timestamp < :from',
+            ['from' => $from]
+        );
+
+        if (!$latest) {
+            return null;
+        }
+
+        $sql = "SELECT timestamp, SUM(count) as total_sum 
+                  FROM {tool_activitystatistics_counts} 
+                 WHERE timestamp = :ts 
+              GROUP BY timestamp";
+
+        $record = $DB->get_record_sql($sql, ['ts' => $latest]);
+        return $record ?: null;
+    }
+
+    /**
+     * Retrieves the historical progression of activity counts broken down by module over time.
      *
-     * @param string[]|null $modnames Optional list of module names to include. Null = all.
-     * @return \stdClass[] list of records
+     * @param string[]|null $modnames Optional array of module internal names (e.g., 'forum'). Null = all.
+     * @param int|null $from Optional lower timestamp bound.
+     * @param int|null $to Optional upper timestamp bound.
+     * @return \stdClass[] List of historical records.
+     * @throws \dml_exception If a database communication error occurs.
      */
     public static function get_activity_counts_history_by_module(
         ?array $modnames = null,
@@ -148,115 +143,59 @@ class data_provider {
         ?int $to = null
     ): array {
         global $DB;
-
-        $params = [];
-        $wheres = [];
+        $criteria = new sql_criteria();
 
         if (!empty($modnames)) {
             list($insql, $inparams) = $DB->get_in_or_equal($modnames, SQL_PARAMS_NAMED, 'mn');
-            $wheres[] = "m.name $insql";
-            $params = array_merge($params, $inparams);
+            $criteria->add("m.name $insql", $inparams);
         }
+        if ($from) { $criteria->add("c.timestamp >= :from", ['from' => $from]); }
+        if ($to) { $criteria->add("c.timestamp <= :to", ['to' => $to]); }
 
-        list($timewhere, $timeparams) = self::get_time_where_clause($from, $to, 'c');
-        if ($timewhere) {
-            $wheres[] = $timewhere;
-            $params = array_merge($params, $timeparams);
-        }
-
-        $where = '';
-        if (!empty($wheres)) {
-            $where = 'WHERE ' . implode(' AND ', $wheres);
-        }
-
-        $sql = "SELECT c.id,                -- WICHTIG: eindeutiger Key für get_records_sql
-                       c.timestamp,
-                       m.name AS activityname,
-                       c.count
+        $sql = "SELECT c.id, c.timestamp, m.name AS activityname, c.count
                   FROM {tool_activitystatistics_counts} c
                   JOIN {modules} m ON m.id = c.activityid
-                  $where
+                  " . $criteria->get_where() . "
               ORDER BY c.timestamp ASC, m.name ASC";
 
-        $records = $DB->get_records_sql($sql, $params);
-
-        if (empty($records) && $from) {
-            $latesttswheres = ['c.timestamp < :from'];
-            $latesttsparams = ['from' => $from];
-            $join = '';
-
-            if (!empty($modnames)) {
-                $join = 'JOIN {modules} m ON m.id = c.activityid';
-                list($insql, $inparams) = $DB->get_in_or_equal($modnames, SQL_PARAMS_NAMED, 'mn');
-                $latesttswheres[] = "m.name $insql";
-                $latesttsparams += $inparams;
-            }
-
-            $latesttswhere = 'WHERE ' . implode(' AND ', $latesttswheres);
-
-            $latesttimestamp = $DB->get_field_sql(
-                "SELECT MAX(c.timestamp)
-                   FROM {tool_activitystatistics_counts} c
-                   $join
-                 $latesttswhere",
-                $latesttsparams
-            );
-
-            if ($latesttimestamp) {
-                $params = [];
-                $wheres = ['c.timestamp = :timestamp'];
-                $params['timestamp'] = $latesttimestamp;
-
-                if (!empty($modnames)) {
-                    list($insql, $inparams) = $DB->get_in_or_equal($modnames, SQL_PARAMS_NAMED, 'mn');
-                    $wheres[] = "m.name $insql";
-                    $params += $inparams;
-                }
-
-                $where = 'WHERE ' . implode(' AND ', $wheres);
-
-                $sql = "SELECT c.id,
-                               c.timestamp,
-                               m.name AS activityname,
-                               c.count
-                          FROM {tool_activitystatistics_counts} c
-                          JOIN {modules} m ON m.id = c.activityid
-                          $where
-                      ORDER BY c.timestamp ASC, m.name ASC";
-                $records = $DB->get_records_sql($sql, $params);
-            }
-        }
-
-        return $records;
+        return $DB->get_records_sql($sql, $criteria->get_params());
     }
 
     /**
-     * @param int|null $from
-     * @param int|null $to
-     * @param string $tablealias
-     * @return array
+     * Finds the latest module-specific count records strictly before a given timestamp.
+     * Acts as a fallback mechanism for the multi-line chart when filtering by custom time ranges.
+     *
+     * @param string[]|null $modnames Optional list of module names.
+     * @param int $from Upper timestamp limit (exclusive).
+     * @return array Array of fallback records indexed by record ID.
+     * @throws \dml_exception If a database communication error occurs.
      */
-    private static function get_time_where_clause(?int $from, ?int $to, string $tablealias = ''): array {
-        $wheres = [];
-        $params = [];
+    public static function get_fallback_module_counts(?array $modnames, int $from): array {
+        global $DB;
+        $criteria = new sql_criteria();
 
-        if ($tablealias) {
-            $tablealias = $tablealias . '.';
+        $criteria->add("c.timestamp < :mainfrom", ['mainfrom' => $from]);
+
+        if (!empty($modnames)) {
+            list($insql, $inparams) = $DB->get_in_or_equal($modnames, SQL_PARAMS_NAMED, 'mn');
+            $criteria->add("m.name $insql", $inparams);
         }
 
-        if ($from) {
-            $wheres[] = $tablealias . 'timestamp >= :from';
-            $params['from'] = $from;
-        }
-        if ($to) {
-            $wheres[] = $tablealias . 'timestamp <= :to';
-            $params['to'] = $to;
-        }
+        $params = $criteria->get_params();
+        $params['subfrom'] = $from;
 
-        if (empty($wheres)) {
-            return ['', []];
-        }
+        $sql = "SELECT c.id, c.timestamp, m.name AS activityname, c.count
+                  FROM {tool_activitystatistics_counts} c
+                  JOIN {modules} m ON m.id = c.activityid
+                  JOIN (
+                      SELECT activityid, MAX(timestamp) as max_ts
+                      FROM {tool_activitystatistics_counts}
+                      WHERE timestamp < :subfrom 
+                      GROUP BY activityid
+                  ) latest ON c.activityid = latest.activityid AND c.timestamp = latest.max_ts
+                  " . $criteria->get_where('AND ') . "
+              ORDER BY m.name ASC";
 
-        return [implode(' AND ', $wheres), $params];
+        return $DB->get_records_sql($sql, $params);
     }
 }
