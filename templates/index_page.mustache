@@ -10,7 +10,9 @@
         The necessary data variables (total_activities, total_count, last_update) are expected
         to be directly available in the root context passed by the backend.
     }}
-    {{> tool_activitystatistics/overview_cards }}
+    {{#overview_cards}}
+        {{> tool_activitystatistics/overview_cards }}
+    {{/overview_cards}}
 
     {{!
         Static visualization block. Unlike the historical data, this single bar chart
