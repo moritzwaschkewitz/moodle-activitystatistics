@@ -18,10 +18,9 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_activitystatistics';
 
-$plugin->version = 2026060612;
+$plugin->version = 2026100600;
 $plugin->release = 'v0.1.0';
 $plugin->maturity = MATURITY_ALPHA;
 
-// TODO: find out which moodle-calls are needed and when they were implemented
 // Require Moodle 4.0.0.
 $plugin->requires = 2022041900.00;

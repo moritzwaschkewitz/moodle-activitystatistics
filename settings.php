@@ -16,12 +16,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig) {
-    $ADMIN->add('tools', new admin_externalpage(
+if ($hassiteconfig || has_capability('tool/activitystatistics:view', context_system::instance())) {
+
+    $ADMIN->add('reports', new admin_externalpage(
         'tool_activitystatistics',
         get_string('pluginname', 'tool_activitystatistics'),
         new moodle_url('/admin/tool/activitystatistics/index.php'),
-        'tool/activitystatistics:view',
+        'tool/activitystatistics:view'
     ));
 
 }
