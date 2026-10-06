@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// TODO: 'riskbitmask' => RISK_NONE
-// RISK_NONE possible or just leave it out?
+/*
+ * Capability definitions for the Activity Statistics plugin.
+ *
+ * Notes on capability design:
+ * - riskbitmask: Intentionally omitted.
+ *   We do not use RISK_PERSONAL because this plugin only exposes globally aggregated,
+ *   anonymized module counts (e.g., "Total Forums: 50"). It does not reveal any
+ *   individual user activity, tracking data, or privacy-sensitive information.
+ * - captype: Set to 'read' because this capability only grants view access to the
+ *   dashboard, without allowing any data modification.
+ * - contextlevel: Set to CONTEXT_SYSTEM since these are site-wide statistics,
+ *   not tied to a specific course or category.
+ */
 $capabilities = [
     'tool/activitystatistics:view' => [
         'captype' => 'read',
